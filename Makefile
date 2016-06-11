@@ -14,3 +14,6 @@ epub:
 
 mobi:
 	$(PANDOC) $(PANDOC_OPTS) *.md $(METADATA) -o $(OUTPUTDIR)/output.mobi
+
+html:
+	$(PANDOC) $(PANDOC_OPTS) *.md $(METADATA) -o $(OUTPUTDIR)/output.html
