@@ -26,5 +26,6 @@ toc:
 		$(PANDOC) $(TOC_OPTS) $$f -o $(OUTPUTDIR)/$$f.toc ; \
 		sed -i "s/#/$$f#/g"  $(OUTPUTDIR)/$$f.toc ; \
 	done ; \
-	cat $(OUTPUTDIR)/*.toc > $(BASEDIR)/README.md
+	cat $(OUTPUTDIR)/*.toc > $(BASEDIR)/README.md ; \
+	rm  $(OUTPUTDIR)/*.toc
 
