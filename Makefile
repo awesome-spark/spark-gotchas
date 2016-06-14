@@ -1,17 +1,17 @@
 pdf:
-	@bash build.sh
+	@bash scripts/build.sh
 
 epub:
-	@bash build.sh epub
+	@bash scripts/build.sh epub
 
 mobi:
-	@bash build.sh mobi
+	@bash scripts/build.sh mobi
 
 html:
-	@bash build.sh html
+	@bash scripts/build.sh html
 
 toc:
-	@bash build.sh toc
+	@bash scripts/build.sh toc
 
 clean:
-		@rm output/*
+	@rm output/*
