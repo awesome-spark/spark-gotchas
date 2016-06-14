@@ -15,7 +15,7 @@ function toc {
   for f in $CHAPTERS ; do
     FILENAME=$(basename $f .md)
 		pandoc $TOC_OPTS $f -o $OUTPUTDIR/$FILENAME.toc ;
-		sed -i 's/#/$f#/g'  $OUTPUTDIR/$FILENAME.toc ;
+		sed -i "s@#@$f#@g"  $OUTPUTDIR/$FILENAME.toc ;
 	done ;
 	cat $OUTPUTDIR/*.toc > $BASEDIR/README.md ;
 	rm  $OUTPUTDIR/*.toc
