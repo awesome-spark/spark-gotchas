@@ -2,7 +2,7 @@
 
 ## Non-lazy evaluation in `DataFrameReader.load`
 
-Lets start with a simple example:
+Let's start with a simple example:
 
 ```scala
 val rdd = spark.sparkContext.parallelize(Seq(
@@ -17,10 +17,12 @@ val df = spark.read.json(foos)
 
 This piece of code looks quite innocent. There is no obvious action here so one could expect it will be lazily evaluated. Reality is quite different though.
 
-To be able to infer schema for `df` Spark will have to evaluate `foos` with all its dependencies and by default it requires full data scan. While in this particular case it is not a huge problem, when working on a large dataset with complex dependencies this can become expensive.
+To be able to infer schema for `df`, Spark will have to evaluate `foos` with all it's dependencies. By default, that will require full data scan. In this particular case it is not a huge problem. Nevertheless, when working on a large dataset with complex dependencies this can become expensive.
 
 
-Non-lazy evaluation takes place when schema cannot by directly established by source type alone (like for example `text` data source) and can take one of two forms:
+Non-lazy evaluation takes place when a schema cannot by directly established by it's source type alone (like for example the `text` data source).
+
+Non-lazy evaluation can take one of following forms:
 
 - metadata access - This is specific to structured sources like relational databases, [Cassandra](http://stackoverflow.com/q/33897586/1560062) or Parquet where schema can be determined without accessing data directly.
 - data access - This happens with unstructured source which cannot provide schema information. Some examples include JSON, XML or MongoDB.
@@ -43,9 +45,9 @@ val dfWithSchema = spark.read.schema(schema).json(foos)
 
 ```
 
-It not only can provide significant performance boost but also serve as simple input validation mechanism.
+It not only can provide significant performance boost but also serves as simple an input validation mechanism.
 
-While initially schema may be unknown or to complex to be created manually it can be easily converted to and from JSON string and reused if needed.
+While initially schema may be unknown or to complex to be created manually, it can be easily converted to and from a JSON string and reused if needed.
 
 ```scala
 import org.apache.spark.sql.types.DataType
@@ -81,22 +83,24 @@ sampled.printSchema
 
 ```
 
-If data contains infrequent fields these will be missing from the final output. But it is only the part of the problem. There is no guarantee that sampling can or will be pushed down to the source. For example JSON source is using standard `RDD.sample`. It means that even with low sampling ratio [we don't avoid full data scan](http://stackoverflow.com/q/32229941/1560062).
+If data contains infrequent fields, these fields will be missing from the final output. But it is only the part of the problem. There is no guarantee that sampling can or will be pushed down to the source. For example JSON source is using standard `RDD.sample`. It means that even with low sampling ratio [we don't avoid full data scan](http://stackoverflow.com/q/32229941/1560062).
 
-If we can access data directly, we can try to create a representative sample outside standard Spark workflow. This sample can further used to infer schema. This can be particularly beneficial when we have a priori knowledge about data structure which allows us to achieve good coverage with a small number of records. General approach can summarized as follows:
+If we can access data directly, we can try to create a representative sample outside standard Spark workflow. This sample can further be used to infer schema. This can be particularly beneficial when we have a priori knowledge about the data structure which allows us to achieve good coverage with a small number of records. General approach can be summarized as follows:
 
 - Create representative sample of the original data source.
 - Read it using `DataFrameReader`.
 - Extract `schema`.
-- Pass `schema` to `DataFrameReader.schema` method to read main dataset.
+- Pass the `schema` to `DataFrameReader.schema` method to read the main dataset.
 
 
 ### PySpark specific considerations
 
 
-Unlike Scala Pyspark cannot use static type information when we convert existing `RDD` to `DataFrame`. If `createDataFrame` (`toDF`) is called without providing `schema`, or `schema` is not a `DataType`, column types have to be inferred by performing data scan.
+Unlike Scala, Pyspark cannot use static type information when we convert existing `RDD` to `DataFrame`. If `createDataFrame` (`toDF`) is called without providing `schema`, or `schema` is not a `DataType`, column types have to be inferred by performing data scan.
 
-By default (`samplingRatio` is `None`) Spark [tries to establish schema using the first 100 rows](https://github.com/apache/spark/blob/branch-2.0/python/pyspark/sql/session.py#L324-L328). At the first glance it doesn't look that bad. Problems start when `RDD` has been created using "wide" transformations. Lets illustrate this with a simple example:
+By default (`samplingRatio` is `None`), Spark [tries to establish schema using the first 100 rows](https://github.com/apache/spark/blob/branch-2.0/python/pyspark/sql/session.py#L324-L328). At the first glance it doesn't look that bad. Problems start when `RDD` are created using "wide" transformations.
+
+Let's illustrate this with a simple example:
 
 
 ```python
@@ -119,7 +123,7 @@ list(get_jobs(sc))
 ## [(0, 1)]
 ```
 
-So far so good. Now lets add a simple aggregation before calling `toDF` and repeat this experiment with a clean context:
+So far so good. Now let's perform a simple aggregation before calling `toDF` and repeat this experiment with a clean context:
 
 ```python
 from operator import add
@@ -133,9 +137,9 @@ list(get_jobs(sc))
 ## [(1, 14), (0, 11)]
 ```
 
-As you can see we had to had evaluate complete lineage. If you're not convinced by the numbers you can check Spark UI.
+As you can see we had to had evaluate the complete lineage. If you're not convinced by the numbers you can always check the Spark UI.
 
-Finally we can add schema to make this operation lazy:
+Finally, we can add schema to make this operation lazy:
 
 ```python
 from pyspark.sql.types import *
@@ -153,7 +157,3 @@ schema = StructType([
 list(get_jobs(sc))
 ## []
 ```
-
-
-
-
