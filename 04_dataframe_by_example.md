@@ -157,3 +157,21 @@ schema = StructType([
 list(get_jobs(sc))
 ## []
 ```
+
+## Window functions 
+
+### Understanding window functions
+
+### ORDER BY clause
+
+### PARTITION BY clause
+
+### ROWS BETWEEN / RANGE BETWEEN clauses
+
+### Requirements and performance considerations
+
+<!-- 
+- Never use window functions without PARITION BY clause
+- UNBOUNDED windows
+- HiveContext 
+-->

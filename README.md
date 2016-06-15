@@ -10,6 +10,15 @@
             Inference](04_dataframe_by_example.md#sampling-for-schema-inference)
         -   [PySpark Specific
             Considerations](04_dataframe_by_example.md#pyspark-specific-considerations)
+    -   [Window functions](04_dataframe_by_example.md#window-functions)
+        -   [Understanding window
+            functions](04_dataframe_by_example.md#understanding-window-functions)
+        -   [ORDER BY clause](04_dataframe_by_example.md#order-by-clause)
+        -   [PARTITION BY clause](04_dataframe_by_example.md#partition-by-clause)
+        -   [ROWS BETWEEN / RANGE BETWEEN
+            clauses](04_dataframe_by_example.md#rows-between-range-between-clauses)
+        -   [Requirements and performance
+            considerations](04_dataframe_by_example.md#requirements-and-performance-considerations)
 -   [Data Preparation](05_data_preparation.md#data-preparation)
 -   [Iterative Algorithms](06_iterative_algorithms.md#iterative-algorithms)
 -   [PySpark Applications](07_pyspark_applications.md#pyspark-applications)
