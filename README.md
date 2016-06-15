@@ -29,3 +29,17 @@
 -   [Data Preparation](06_data_preparation.md#data-preparation)
 -   [Iterative Algorithms](07_iterative_algorithms.md#iterative-algorithms)
 -   [PySpark Applications](08_pyspark_applications.md#pyspark-applications)
+-   [Serialization](99-serialization.md#serialization)
+    -   [JVM](99-serialization.md#jvm)
+        -   [Java serialization](99-serialization.md#java-serialization)
+        -   [Kryo serialization](99-serialization.md#kryo-serialization)
+    -   [PySpark serialization](99-serialization.md#pyspark-serialization)
+        -   [Python serializers
+            characteristics](99-serialization.md#python-serializers-characteristics)
+        -   [PySpark serialization
+            strategies](99-serialization.md#pyspark-serialization-strategies)
+        -   [Congiguring PySpark
+            serialization](99-serialization.md#congiguring-pyspark-serialization)
+        -   [PySpark and Kryo](99-serialization.md#pyspark-and-kryo)
+    -   [SerDe during JVM - guest
+        communication](99-serialization.md#serde-during-jvm---guest-communication)
