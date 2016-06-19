@@ -1,6 +1,6 @@
-# DataFrame by example
+# `DataFrame` by Example
 
-## Non-lazy evaluation in `DataFrameReader.load`
+## Non-lazy Evaluation in `DataFrameReader.load`
 
 Let's start with a simple example:
 
@@ -29,7 +29,7 @@ Non-lazy evaluation can take one of following forms:
 
 While the impact of the former variant should be negligible, the latter one can severely overall performance and put significant pressure on the external systems.
 
-### Explicit schema
+### Explicit Schema
 
 The most efficient and universal solution is to provide schema directly:
 
@@ -61,7 +61,7 @@ val schemaOption: Option[StructType] =  DataType.fromJson(schemaJson) match {
 
 ```
 
-###  Sampling for schema inference
+###  Sampling for Schema Inference
 
 Another possible approach is to infer schema on a subset of the input data. It can take one of two forms.
 
@@ -93,7 +93,7 @@ If we can access data directly, we can try to create a representative sample out
 - Pass the `schema` to `DataFrameReader.schema` method to read the main dataset.
 
 
-### PySpark specific considerations
+### PySpark Specific Considerations
 
 
 Unlike Scala, Pyspark cannot use static type information when we convert existing `RDD` to `DataFrame`. If `createDataFrame` (`toDF`) is called without providing `schema`, or `schema` is not a `DataType`, column types have to be inferred by performing data scan.
