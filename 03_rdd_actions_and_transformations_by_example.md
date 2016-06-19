@@ -1,2 +1,2 @@
-# RDD actions and transformations by example
+# RDD actions and Transformations by Example
 

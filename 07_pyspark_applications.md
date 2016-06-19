@@ -1,2 +1,2 @@
-# PySpark applications
+# PySpark Applications
 

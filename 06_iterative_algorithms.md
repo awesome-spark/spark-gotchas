@@ -1,2 +1,2 @@
-# Iterative algorithms
+# Iterative Algorithms
 
