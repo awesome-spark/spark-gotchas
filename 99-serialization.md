@@ -2,19 +2,21 @@
 
 ## JVM
 
-### Java serialization
+### Java Serialization
 
-### Kryo serialization
+### Kryo Serialization
 
-## PySpark serialization
+## PySpark Serialization
 
-### Python serializers characteristics
+PySpark provides 2-tier serialization mechanism.
 
-### PySpark serialization strategies
+### Python Serializers Characteristics
 
-### Congiguring PySpark serialization 
+### PySpark Serialization Strategies
+
+### Congiguring PySpark Serialization
 
 ### PySpark and Kryo
 
-## SerDe during JVM - guest communication
+## SerDe During JVM - Guest Communication
 
