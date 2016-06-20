@@ -28,10 +28,10 @@
             Considerations](05_dataframe_by_example.md#requirements-and-performance-considerations)
 -   [Data Preparation](06_data_preparation.md#data-preparation)
 -   [Iterative Algorithms](07_iterative_algorithms.md#iterative-algorithms)
-    -   [Iterative applications and
-        lineage](07_iterative_algorithms.md#iterative-applications-and-lineage)
-        -   [Truncating lineage in `Dataset`
+    -   [Iterative Applications and
+        Lineage](07_iterative_algorithms.md#iterative-applications-and-lineage)
+        -   [Truncating Lineage in `Dataset`
             API](07_iterative_algorithms.md#truncating-lineage-in-dataset-api)
-    -   [Controling number of partitions in iterative
-        applications](07_iterative_algorithms.md#controling-number-of-partitions-in-iterative-applications)
+    -   [Controling Number of Partitions in Iterative
+        Applications](07_iterative_algorithms.md#controling-number-of-partitions-in-iterative-applications)
 -   [PySpark Applications](08_pyspark_applications.md#pyspark-applications)

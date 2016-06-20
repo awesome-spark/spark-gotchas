@@ -1,8 +1,8 @@
 # Iterative Algorithms
 
-## Iterative applications and lineage
+## Iterative Applications and Lineage
 
-### Truncating lineage in `Dataset` API
+### Truncating Lineage in `Dataset` API
 
-## Controling number of partitions in iterative applications
+## Controling Number of Partitions in Iterative Applications
 
