@@ -1,4 +1,12 @@
 -   [Introduction](00-introduction.md#introduction)
+    -   [Understanding Spark
+        Architecture](00-introduction.md#understanding-spark-architecture)
+        -   [Lack of Global Shared State and Spark
+            Closures](00-introduction.md#lack-of-global-shared-state-and-spark-closures)
+        -   [Distributed Processing and its
+            Scope](00-introduction.md#distributed-processing-and-its-scope)
+    -   [Feature Parity and Architecture of the Guest
+        Languages](00-introduction.md#feature-parity-and-architecture-of-the-guest-languages)
 -   [Spark Application Deployment](01_spark_application_deployment.md#spark-application-deployment)
 -   [Spark Application Building](02_spark_application_building.md#spark-application-building)
 -   [RDD actions and Transformations by
