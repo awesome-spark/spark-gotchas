@@ -1,31 +1,31 @@
--   [Introduction](00-introduction.md#introduction)
-    -   [Understanding Spark
-        Architecture](00-introduction.md#understanding-spark-architecture)
-        -   [Lack of Global Shared State and Spark
-            Closures](00-introduction.md#lack-of-global-shared-state-and-spark-closures)
-        -   [Distributed Processing and its
-            Scope](00-introduction.md#distributed-processing-and-its-scope)
+-   [Introduction](00_introduction.md#introduction)
+-   [Understanding Spark
+    Architecture](01_understanding_spark_architecure.md#understanding-spark-architecture)
+    -   [Lack of Global Shared State and Spark
+        Closures](01_understanding_spark_architecure.md#lack-of-global-shared-state-and-spark-closures)
+    -   [Distributed Processing and its
+        Scope](01_understanding_spark_architecure.md#distributed-processing-and-its-scope)
     -   [Feature Parity and Architecture of the Guest
-        Languages](00-introduction.md#feature-parity-and-architecture-of-the-guest-languages)
--   [Spark Application Deployment](01_spark_application_deployment.md#spark-application-deployment)
--   [Spark Application Building](02_spark_application_building.md#spark-application-building)
+        Languages](01_understanding_spark_architecure.md#feature-parity-and-architecture-of-the-guest-languages)
+-   [Spark Application Deployment](02_spark_application_deployment.md#spark-application-deployment)
+-   [Spark Application Building](03_spark_application_building.md#spark-application-building)
 -   [RDD actions and Transformations by
-    Example](03_rdd_actions_and_transformations_by_example.md#rdd-actions-and-transformations-by-example)
--   [`DataFrame` by Example](04_dataframe_by_example.md#dataframe-by-example)
+    Example](04_rdd_actions_and_transformations_by_example.md#rdd-actions-and-transformations-by-example)
+-   [`DataFrame` by Example](05_dataframe_by_example.md#dataframe-by-example)
     -   [Non-lazy Evaluation in
-        `DataFrameReader.load`](04_dataframe_by_example.md#non-lazy-evaluation-in-dataframereader.load)
-        -   [Explicit Schema](04_dataframe_by_example.md#explicit-schema)
+        `DataFrameReader.load`](05_dataframe_by_example.md#non-lazy-evaluation-in-dataframereader.load)
+        -   [Explicit Schema](05_dataframe_by_example.md#explicit-schema)
         -   [Sampling for Schema
-            Inference](04_dataframe_by_example.md#sampling-for-schema-inference)
+            Inference](05_dataframe_by_example.md#sampling-for-schema-inference)
         -   [PySpark Specific
-            Considerations](04_dataframe_by_example.md#pyspark-specific-considerations)
-    -   [Window Functions](04_dataframe_by_example.md#window-functions)
+            Considerations](05_dataframe_by_example.md#pyspark-specific-considerations)
+    -   [Window Functions](05_dataframe_by_example.md#window-functions)
         -   [Understanding Window
-            Functions](04_dataframe_by_example.md#understanding-window-functions)
-        -   [Window Definitions](04_dataframe_by_example.md#window-definitions)
-        -   [Example Usage](04_dataframe_by_example.md#example-usage)
+            Functions](05_dataframe_by_example.md#understanding-window-functions)
+        -   [Window Definitions](05_dataframe_by_example.md#window-definitions)
+        -   [Example Usage](05_dataframe_by_example.md#example-usage)
         -   [Requirements and Performance
-            Considerations](04_dataframe_by_example.md#requirements-and-performance-considerations)
--   [Data Preparation](05_data_preparation.md#data-preparation)
--   [Iterative Algorithms](06_iterative_algorithms.md#iterative-algorithms)
--   [PySpark Applications](07_pyspark_applications.md#pyspark-applications)
+            Considerations](05_dataframe_by_example.md#requirements-and-performance-considerations)
+-   [Data Preparation](06_data_preparation.md#data-preparation)
+-   [Iterative Algorithms](07_iterative_algorithms.md#iterative-algorithms)
+-   [PySpark Applications](08_pyspark_applications.md#pyspark-applications)
