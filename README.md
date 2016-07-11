@@ -11,21 +11,21 @@
 -   [Spark Application Building](03_spark_application_building.md#spark-application-building)
 -   [RDD actions and Transformations by
     Example](04_rdd_actions_and_transformations_by_example.md#rdd-actions-and-transformations-by-example)
--   [`DataFrame` by Example](05_dataframe_by_example.md#dataframe-by-example)
+-   [Spark SQL and Dataset API](05_spark_sql_and_dataset_api.md#spark-sql-and-dataset-api)
     -   [Non-lazy Evaluation in
-        `DataFrameReader.load`](05_dataframe_by_example.md#non-lazy-evaluation-in-dataframereader.load)
-        -   [Explicit Schema](05_dataframe_by_example.md#explicit-schema)
+        `DataFrameReader.load`](05_spark_sql_and_dataset_api.md#non-lazy-evaluation-in-dataframereader.load)
+        -   [Explicit Schema](05_spark_sql_and_dataset_api.md#explicit-schema)
         -   [Sampling for Schema
-            Inference](05_dataframe_by_example.md#sampling-for-schema-inference)
+            Inference](05_spark_sql_and_dataset_api.md#sampling-for-schema-inference)
         -   [PySpark Specific
-            Considerations](05_dataframe_by_example.md#pyspark-specific-considerations)
-    -   [Window Functions](05_dataframe_by_example.md#window-functions)
+            Considerations](05_spark_sql_and_dataset_api.md#pyspark-specific-considerations)
+    -   [Window Functions](05_spark_sql_and_dataset_api.md#window-functions)
         -   [Understanding Window
-            Functions](05_dataframe_by_example.md#understanding-window-functions)
-        -   [Window Definitions](05_dataframe_by_example.md#window-definitions)
-        -   [Example Usage](05_dataframe_by_example.md#example-usage)
+            Functions](05_spark_sql_and_dataset_api.md#understanding-window-functions)
+        -   [Window Definitions](05_spark_sql_and_dataset_api.md#window-definitions)
+        -   [Example Usage](05_spark_sql_and_dataset_api.md#example-usage)
         -   [Requirements and Performance
-            Considerations](05_dataframe_by_example.md#requirements-and-performance-considerations)
+            Considerations](05_spark_sql_and_dataset_api.md#requirements-and-performance-considerations)
 -   [Data Preparation](06_data_preparation.md#data-preparation)
 -   [Iterative Algorithms](07_iterative_algorithms.md#iterative-algorithms)
 -   [PySpark Applications](08_pyspark_applications.md#pyspark-applications)
