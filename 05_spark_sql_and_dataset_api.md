@@ -1,4 +1,4 @@
-# `DataFrame` by Example
+# Spark SQL and Dataset API
 
 ## Non-lazy Evaluation in `DataFrameReader.load`
 
