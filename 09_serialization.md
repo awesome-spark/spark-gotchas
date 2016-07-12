@@ -30,6 +30,10 @@ There is a subtle difference in `pickle` imports between Python 2 and Python 3. 
 
 ### PySpark Serialization Strategies
 
+#### AutoBatchedSerializer
+
+#### BatchedSerializer
+
 ### Configuring PySpark Serialization
 
 Global serialization mechanism can be configured during `SparkContext` initialization and provides two configurable properties - `batchSize` and `serializer`.
