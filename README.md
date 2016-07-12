@@ -38,8 +38,8 @@
             Characteristics](09_serialization.md#python-serializers-characteristics)
         -   [PySpark Serialization
             Strategies](09_serialization.md#pyspark-serialization-strategies)
-        -   [Congiguring PySpark
-            Serialization](09_serialization.md#congiguring-pyspark-serialization)
+        -   [Configuring PySpark
+            Serialization](09_serialization.md#configuring-pyspark-serialization)
         -   [PySpark and Kryo](09_serialization.md#pyspark-and-kryo)
     -   [SerDe During JVM - Guest
         Communication](09_serialization.md#serde-during-jvm---guest-communication)

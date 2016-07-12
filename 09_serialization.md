@@ -30,7 +30,7 @@ There is a subtle difference in `pickle` imports between Python 2 and Python 3. 
 
 ### PySpark Serialization Strategies
 
-### Congiguring PySpark Serialization
+### Configuring PySpark Serialization
 
 ### PySpark and Kryo
 
