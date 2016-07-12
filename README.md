@@ -29,17 +29,17 @@
 -   [Data Preparation](06_data_preparation.md#data-preparation)
 -   [Iterative Algorithms](07_iterative_algorithms.md#iterative-algorithms)
 -   [PySpark Applications](08_pyspark_applications.md#pyspark-applications)
--   [Serialization](99-serialization.md#serialization)
-    -   [JVM](99-serialization.md#jvm)
-        -   [Java Serialization](99-serialization.md#java-serialization)
-        -   [Kryo Serialization](99-serialization.md#kryo-serialization)
-    -   [PySpark Serialization](99-serialization.md#pyspark-serialization)
+-   [Serialization](09_serialization.md#serialization)
+    -   [JVM](09_serialization.md#jvm)
+        -   [Java Serialization](09_serialization.md#java-serialization)
+        -   [Kryo Serialization](09_serialization.md#kryo-serialization)
+    -   [PySpark Serialization](09_serialization.md#pyspark-serialization)
         -   [Python Serializers
-            Characteristics](99-serialization.md#python-serializers-characteristics)
+            Characteristics](09_serialization.md#python-serializers-characteristics)
         -   [PySpark Serialization
-            Strategies](99-serialization.md#pyspark-serialization-strategies)
+            Strategies](09_serialization.md#pyspark-serialization-strategies)
         -   [Congiguring PySpark
-            Serialization](99-serialization.md#congiguring-pyspark-serialization)
-        -   [PySpark and Kryo](99-serialization.md#pyspark-and-kryo)
+            Serialization](09_serialization.md#congiguring-pyspark-serialization)
+        -   [PySpark and Kryo](09_serialization.md#pyspark-and-kryo)
     -   [SerDe During JVM - Guest
-        Communication](99-serialization.md#serde-during-jvm---guest-communication)
+        Communication](09_serialization.md#serde-during-jvm---guest-communication)
