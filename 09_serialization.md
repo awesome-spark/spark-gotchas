@@ -32,6 +32,29 @@ There is a subtle difference in `pickle` imports between Python 2 and Python 3. 
 
 ### Configuring PySpark Serialization
 
+Global serialization mechanism can be configured during `SparkContext` initialization and provides two configurable properties - `batchSize` and `serializer`.
+
+
+- `batchsize` argument is used to configure batching strategy and takes an intger which has following interpretation:
+
+  - `0` -  `AutoBatchedSerializer`.
+  - `-1` - `BatchedSerializer` with unlimited batch size.
+  - positive integer - `BatchedSerializer` with fixed batch size.
+
+
+- `serializer` accepts an instance of a `pyspark.serializer` for example:
+
+
+  ```python
+  from pyspark import SparkContext
+  from pyspark.serializers import MarshalSerializer
+
+  sc = SparkContext(serializer=MarshalSerializer())
+  ```
+
+In Spark 2.0.0+ you have to create `SparkContext` before `SparkSession` if you builder or pass it explicitly to `SparkSession` constructor.
+
+
 ### PySpark and Kryo
 
 ## SerDe During JVM - Guest Communication
