@@ -206,8 +206,8 @@ For unbounded windows one should use  `-sys.maxsize` / `sys.maxsize` and `Long.M
 
 Default frame specification depends on other aspects of a given window defintion:
 
-- if `ORDER BY` clause is specified and function accepts frame specification it is `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`,
-- otherwise it is `ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING`.
+- if the `ORDER BY` clause is specified and the function accepts the frame specification, then the frame specification is defined by `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`,
+- otherwise the frame specification is defined by `ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING`.
 
 The first rules has some interesting consequences. For `last("foo").over(Window.orderBy($"foo"))` will always return the current `foo`.
 
