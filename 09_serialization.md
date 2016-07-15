@@ -32,11 +32,26 @@ There is a subtle difference in `pickle` imports between Python 2 and Python 3. 
 
 #### AutoBatchedSerializer
 
+`AutoBatchedSerializer` is used to serialize a stream of objects in batches of size which is dynamically adjusted on runtime to keep size of an individual batch in bytes close to `bestSize` parameter. By default it is 65536 bytes. General algorithm can be described as follows:
+
+
+1. Set `batchSize` to 1
+2. While input stream is not empty
+
+  - read `batchSize` elements and serialize,
+  - compute `size` in bytes of the serialized batch,
+    - if `size` is less than `bestSize` set `batchSize` to `batchSize` * 2
+    - else if `size` is greater than `bestSize` set `batchSize` to `batchSize` / 2
+    - else keep current value
+
+
 #### BatchedSerializer
+
+`BatchedSerializer` is used to serialize a stream of objects using either fixed size batches or unlimited batches.
 
 ### Configuring PySpark Serialization
 
-Global serialization mechanism can be configured during `SparkContext` initialization and provides two configurable properties - `batchSize` and `serializer`.
+By default PySpark uses `AutoBatchedSerializer` with `PickleSerializer`. Global serialization mechanism can be configured during `SparkContext` initialization and provides two configurable properties - `batchSize` and `serializer`.
 
 
 - `batchsize` argument is used to configure batching strategy and takes an intger which has following interpretation:
@@ -57,6 +72,21 @@ Global serialization mechanism can be configured during `SparkContext` initializ
   ```
 
 In Spark 2.0.0+ you have to create `SparkContext` before `SparkSession` if you builder or pass it explicitly to `SparkSession` constructor.
+
+
+It is also possible, although for obvious reasons not recommended, to use internal API to modify serialization mechanism for specific RDD:
+
+
+```python
+
+from pyspark import SparkContext
+from pyspark.serializers import  BatchedSerializer, MarshalSerializer
+
+sc = SparkContext()
+
+rdd = sc.parallelize(range(10))
+rdd._reserialize(BatchedSerializer(MarshalSerializer(), 1))
+```
 
 
 ### PySpark and Kryo
