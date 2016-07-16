@@ -30,6 +30,8 @@
 -   [Iterative Algorithms](07_iterative_algorithms.md#iterative-algorithms)
     -   [Iterative Applications and
         Lineage](07_iterative_algorithms.md#iterative-applications-and-lineage)
+        -   [Checkpointing](07_iterative_algorithms.md#checkpointing)
+        -   ["Flat transformations"](07_iterative_algorithms.md#flat-transformations)
         -   [Truncating Lineage in `Dataset`
             API](07_iterative_algorithms.md#truncating-lineage-in-dataset-api)
     -   [Controling Number of Partitions in Iterative
