@@ -43,15 +43,24 @@ val rdds = (0L to 4L).map(i => sc.range(10L * i, 10L * (i + 1L)))
 If we chain `union` calls:
 
 ```scala
-val rdd = rdds.foldLeft(sc.emptyRDD[Long])((acc, rdd) => acc.union(rdd))
+rdds.foldLeft(sc.emptyRDD[Long])((acc, rdd) => acc.union(rdd))
 
 ```
 
 we'll get a following DAG:
 
-![Iterative](images/07_iterative_algorithms/01_iterative_union.png)
+![Iterative union](images/07_iterative_algorithms/01_iterative_union.png)
 
 
+In contrast with a single call to `SparkContext.union`:
+
+```scala
+sc.union(rdds)
+```
+
+we'll get a shallow DAG which looks as shown below:
+
+![Single union](images/07_iterative_algorithms/02_sc_union.png)
 
 
 #### Joining multiple RDDs
