@@ -19,7 +19,7 @@ Since RDDs are immutable every transformation extends the lineage creating a dee
 
 ### Checkpointing
 
-Checkpointing (don't be mistaken with [checkpointing in Spark Streaming](https://spark.apache.org/docs/latest/streaming-programming-guide.html#checkpointing)) is a mechanism which enables truncating the lineage. It has consequences:
+Checkpointing (don't be mistaken with [checkpointing in Spark Streaming](https://spark.apache.org/docs/latest/streaming-programming-guide.html#checkpointing)) is a mechanism which enables truncating the lineage. It has following consequences:
 
 - It saves RDD to Spark checkpoint directory.
 - It removes references to the partent RDDs.
@@ -29,6 +29,9 @@ Checkpointing (don't be mistaken with [checkpointing in Spark Streaming](https:/
 The biggest advantage of checkpointing is that it is universal. It can be used with any lineage independent of particular transformations.
 
 ### "Flat transformations"
+
+As a complementary to truncating lineage we can use transformations which keep lineage short. This can be achieved either with built-in methods like `SparkContext.union` and `PairRDDFunctions.cogroup` or by preferring fat transformations over transformation chaining.
+
 
 ### Truncating Lineage in `Dataset` API
 
