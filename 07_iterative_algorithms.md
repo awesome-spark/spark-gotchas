@@ -32,6 +32,32 @@ The biggest advantage of checkpointing is that it is universal. It can be used w
 
 As a complementary to truncating lineage we can use transformations which keep lineage short. This can be achieved either with built-in methods like `SparkContext.union` and `PairRDDFunctions.cogroup` or by preferring fat transformations over transformation chaining.
 
+#### Creating union of multiple RDDs
+
+Whenever we perform and iterative union without referencing partial results we can replace transformation chaining with a single call to `SparkContext.union`. Lets use DAG to illustrate the difference between these two methods. Let's assume that we have a sequence of RDDs:
+
+```scala
+val rdds = (0L to 4L).map(i => sc.range(10L * i, 10L * (i + 1L)))
+```
+
+If we chain `union` calls:
+
+```scala
+val rdd = rdds.foldLeft(sc.emptyRDD[Long])((acc, rdd) => acc.union(rdd))
+
+```
+
+we'll get a following DAG:
+
+![Iterative](images/07_iterative_algorithms/01_iterative_union.png)
+
+
+
+
+#### Joining multiple RDDs
+
+#### Pushing operations to the lower position in the stack
+
 
 ### Truncating Lineage in `Dataset` API
 
