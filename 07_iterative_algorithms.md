@@ -28,11 +28,11 @@ Checkpointing (don't be mistaken with [checkpointing in Spark Streaming](https:/
 
 The biggest advantage of checkpointing is that it is universal. It can be used with any lineage independent of particular transformations.
 
-### "Flat transformations"
+### "Flat Transformations"
 
 As a complementary to truncating lineage we can use transformations which keep lineage short. This can be achieved either with built-in methods like `SparkContext.union` and `PairRDDFunctions.cogroup` or by preferring fat transformations over transformation chaining.
 
-#### Creating union of multiple RDDs
+#### Creating an Union of Multiple RDDs
 
 Whenever we perform and iterative union without referencing partial results we can replace transformation chaining with a single call to `SparkContext.union`. Lets use DAG to illustrate the difference between these two methods. Let's assume that we have a sequence of RDDs:
 
@@ -62,12 +62,12 @@ we'll get a shallow DAG which looks as shown below:
 
 ![Single union](images/07_iterative_algorithms/02_sc_union.png)
 
-#### Joining multiple RDDs
+#### Joining Multiple RDDs
 
 Similarly to creating an `union` it is possible to `join` multiple RDDs at once using `RDD.cogroup` although this approach is fairly limited. First of all Spark provide ability to `cogroup` up to 4 RDDs at the time. Moreover this process is quite expensive and it is not recommended when number of values per key is large. Nevertheless it can be useful in certain situations.
 
 
-#### Pushing operations to the lower position in the stack
+#### Pushing Transformations to the Local Data Structures
 
 
 ### Truncating Lineage in `Dataset` API
