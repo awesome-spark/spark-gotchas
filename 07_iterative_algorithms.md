@@ -62,8 +62,10 @@ we'll get a shallow DAG which looks as shown below:
 
 ![Single union](images/07_iterative_algorithms/02_sc_union.png)
 
-
 #### Joining multiple RDDs
+
+Similarly to creating an `union` it is possible to `join` multiple RDDs at once using `RDD.cogroup` although this approach is fairly limited. First of all Spark provide ability to `cogroup` up to 4 RDDs at the time. Moreover this process is quite expensive and it is not recommended when number of values per key is large. Nevertheless it can be useful in certain situations.
+
 
 #### Pushing operations to the lower position in the stack
 
