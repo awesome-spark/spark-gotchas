@@ -32,8 +32,7 @@ There is a subtle difference in `pickle` imports between Python 2 and Python 3. 
 
 #### AutoBatchedSerializer
 
-`AutoBatchedSerializer` is used to serialize a stream of objects in batches of size which is dynamically adjusted on runtime to keep size of an individual batch in bytes close to `bestSize` parameter. By default it is 65536 bytes. General algorithm can be described as follows:
-
+`AutoBatchedSerializer` is used to serialize a stream of objects in batches of size which is dynamically adjusted on runtime to keep the size of an individual batch in bytes close to the `bestSize` parameter. By default it is 65536 bytes. The general algorithm can be described as follows:
 
 1. Set `batchSize` to 1
 2. While input stream is not empty
@@ -71,7 +70,7 @@ By default PySpark uses `AutoBatchedSerializer` with `PickleSerializer`. Global 
   sc = SparkContext(serializer=MarshalSerializer())
   ```
 
-In Spark 2.0.0+ you have to create `SparkContext` before `SparkSession` if you builder or pass it explicitly to `SparkSession` constructor.
+In Spark 2.0.0+, you have to create `SparkContext` before `SparkSession` if you builder or pass it explicitly to `SparkSession` constructor.
 
 
 It is also possible, although for obvious reasons not recommended, to use internal API to modify serialization mechanism for specific RDD:
