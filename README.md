@@ -28,6 +28,14 @@
             Considerations](05_spark_sql_and_dataset_api.md#requirements-and-performance-considerations)
 -   [Data Preparation](06_data_preparation.md#data-preparation)
 -   [Iterative Algorithms](07_iterative_algorithms.md#iterative-algorithms)
+    -   [Iterative Applications and
+        Lineage](07_iterative_algorithms.md#iterative-applications-and-lineage)
+        -   [Checkpointing](07_iterative_algorithms.md#checkpointing)
+        -   ["Flat Transformations"](07_iterative_algorithms.md#flat-transformations)
+        -   [Truncating Lineage in `Dataset`
+            API](07_iterative_algorithms.md#truncating-lineage-in-dataset-api)
+    -   [Controling Number of Partitions in Iterative
+        Applications](07_iterative_algorithms.md#controling-number-of-partitions-in-iterative-applications)
 -   [PySpark Applications](08_pyspark_applications.md#pyspark-applications)
 -   [Serialization](09_serialization.md#serialization)
     -   [JVM](09_serialization.md#jvm)
