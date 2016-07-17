@@ -70,8 +70,7 @@ By default PySpark uses `AutoBatchedSerializer` with `PickleSerializer`. Global 
   sc = SparkContext(serializer=MarshalSerializer())
   ```
 
-In Spark 2.0.0+, you have to create `SparkContext` before `SparkSession` if you builder or pass it explicitly to `SparkSession` constructor.
-
+In Spark 2.0.0+, you will need to create `SparkContext` before the `SparkSession` if you use the session builder, otherwise pass it explicitly to `SparkSession` constructor.
 
 It is also possible, although for obvious reasons not recommended, to use internal API to modify serialization mechanism for specific RDD:
 
