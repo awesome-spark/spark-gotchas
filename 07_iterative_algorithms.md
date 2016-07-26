@@ -69,6 +69,82 @@ Similarly to creating an `union` it is possible to `join` multiple RDDs at once 
 
 #### Pushing Transformations to the Local Data Structures
 
+Relatively simple but powerful and efficient way to reduce the length of the lineage is to replace consecutive narrow transformations with their local equivalent. Since basic methods from RDD API have identical equivalents in `Iterator` API it is as simple as using `mapPartitions`. For example following chain of transformations:
+
+```scala
+val rdd = sc.range(0L, 100L)
+
+
+rdd.filter(_ % 17 == 3).map(x => x until x * x).flatMap(_.map(_ + 1)).filter(_ % 2 != 0)
+
+```
+can be expressed as:
+
+```scala
+rdd.mapPartitions(
+  _.filter(_ % 17 == 3).map(x => x until x * x).flatMap(_.map(_ + 1)).filter(_ % 2 != 0)
+)
+
+```
+with minimal changes in the code.
+
+This method is particularly useful when working with simple simulations and Monte Carlo methods. Consider following example:
+
+```scala
+import breeze.stats.distributions.Gaussian
+
+val rdd = sc.parallelize(Array.fill(1000)(0.0))
+
+def simulate(iter: Iterator[Double]) = {
+  val g = Gaussian.distribution((0.0, 1.0))
+  iter.map(_ + g.get)
+}
+
+
+// This will result in java.lang.StackOverflowError
+(0 to 1000).foldLeft(rdd)((acc, _) => acc.mapPartitions(simulate _)).stats
+
+```
+
+which should result in `java.lang.StackOverflowError` while alternative approach:
+
+
+```scala
+rdd.mapPartitions(iter => {
+  (0 to 1000).foldLeft(iter)((acc, _) => simulate(acc))
+}).stats
+```
+
+should finish without any issues.
+
+Another advantage of this approach is that it can be easily tested using local data structures without initializing `SparkContext`.
+
+Unfortunately there is no drop in replacement in Python so working with PySpark requires a little bit more effort. For example with [`toolz`](https://github.com/pytoolz/toolz) library we can replace:
+
+
+```python
+rdd = sc.parallelize(range(100))
+
+(rdd
+    .filter(lambda x: x % 17 == 3)
+    .map(lambda x: range(x, x * x))
+    .flatMap(lambda xs: (x + 1 for x in xs)))
+```
+
+with:
+
+```python
+from toolz.curried import filter, pipe, map, mapcat as flatMap
+
+def f(iter):
+    return pipe(
+        iter,
+        filter(lambda x: x % 17 == 3),
+        map(lambda x: range(x, x * x)),
+        flatMap(lambda xs: (x + 1 for x in xs)))
+
+rdd.mapPartitions(f)
+```
 
 ### Truncating Lineage in `Dataset` API
 
