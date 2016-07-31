@@ -2,15 +2,20 @@
 
 ## DataFrame Metadata
 
-Column metadata is one of the most useful and the least known features of the Spark `Dataset`. Although it is widely used by [ML `Pipelines`](https://spark.apache.org/docs/latest/ml-pipeline.html) to indicate variable types and levels a whole process is usually completely transparent and at least partially hidden from the final user so let's look at a simple pipeline and see what happens behind the scenes.
+Column metadata is one of the most useful and the least known features of the Spark `Dataset`.
+
+### Metadata in ML pipelines
+
+Although it is widely used by [ML `Pipelines`](https://spark.apache.org/docs/latest/ml-pipeline.html) to indicate variable types and levels a whole process is usually completely transparent and at least partially hidden from the final user so let's look at a simple pipeline and see what happens behind the scenes.
 
 We'll start with a simple dataset:
 
 
 ```scala
 val df = Seq(
-  (0, "x", 2.0),
-  (1, "y", 3.0)
+  (0.0, "x", 2.0),
+  (1.0, "y", 3.0),
+  (2.0, "y", -1.0)
 ).toDF("label", "x1", "x2")
 ```
 
@@ -24,7 +29,6 @@ val stages = Array(
   new StringIndexer().setInputCol("x1").setOutputCol("x1_"),
   new VectorAssembler().setInputCols(Array("x1_", "x2")).setOutputCol("features")
 )
-
 
 val model = new Pipeline().setStages(stages).fit(df)
 ```
@@ -45,7 +49,7 @@ and see what is going on at each stage:
   // Seq[org.apache.spark.sql.types.Metadata] = List({}, {}, {}, {})
   ```
 
-2. After transforming with `StringIndexerModel`:
+2. After transforming with `StringIndexerModel` we can see indexer specific metadata:
 
   ```scala
   dfs(1).schema.last.metadata
@@ -53,6 +57,7 @@ and see what is going on at each stage:
   // org.apache.spark.sql.types.Metadata =
   //   {"ml_attr":{"vals":["x","y"],"type":"nominal","name":"x1_"}}
   ```
+  It is important to note that this information is stored locally so it is better to keep that in mind if number of unique values is large.
 
 3. Finally metadata for assembled feature vector:
 
@@ -64,8 +69,33 @@ and see what is going on at each stage:
   //   "nominal":[{"vals":["x","y"],"idx":0,"name":"x1_"}]
   // },"num_attrs":2}}
   ```
+  Metadata from upstream stages is picked by the assembler and used to describe vector indices.
 
 
+Let's check if metadata is actually used in practice:
 
+
+```scala
+import org.apache.spark.ml.classification.DecisionTreeClassifier
+
+new DecisionTreeClassifier().setLabelCol("label").fit(dfs.last).toDebugString
+
+// String =
+// "DecisionTreeClassificationModel (uid=dtc_72c1c370aa00) of depth 2 with 5 nodes
+//   If (feature 0 in {0.0})
+//    If (feature 1 <= -1.0)
+//     Predict: 2.0
+//    Else (feature 1 > -1.0)
+//     Predict: 1.0
+//   Else (feature 0 not in {0.0})
+//    Predict: 0.0
+// "
+```
+
+_**Note**: Prior to Spark 2.0.0 `label` column would require indexing._
+
+As you can see nominal and numerical features are recognized and used in different ways.
+
+### Setting custom column metadata
 
 
