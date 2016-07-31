@@ -28,8 +28,6 @@
             Considerations](05_spark_sql_and_dataset_api.md#requirements-and-performance-considerations)
 -   [Data Preparation](06_data_preparation.md#data-preparation)
     -   [DataFrame Metadata](06_data_preparation.md#dataframe-metadata)
-        -   [Column Metadata and ML Tranformers and
-            Estimators](06_data_preparation.md#column-metadata-and-ml-tranformers-and-estimators)
 -   [Iterative Algorithms](07_iterative_algorithms.md#iterative-algorithms)
     -   [Iterative Applications and
         Lineage](07_iterative_algorithms.md#iterative-applications-and-lineage)
