@@ -220,4 +220,40 @@ df_with_meta.schema[-1].metadata == meta
 
 ### Setting custom column metadata
 
+Arguably the true power of metadata shows itself when used outside restricted ML environment. It is possible to attach an arbitrary JSON document to each column using it to provenance tracking, storing diagnostic information or performing different data enrichment tasks.
 
+[`Metadata`](https://spark.apache.org/docs/latest/api/scala/index.html#org.apache.spark.sql.types.Metadata) object created from JSON string:
+
+
+```scala
+import org.apache.spark.sql.types.Metadata
+
+
+Metadata.fromJson("""{"foo": "bar"}""")
+
+// org.apache.spark.sql.types.Metadata = {"foo":"bar"}
+```
+or constructed using `MetadataBuilder`:
+
+```scala
+import org.apache.spark.sql.types.MetadataBuilder
+
+new MetadataBuilder().putString("foo", "bar").build
+
+// org.apache.spark.sql.types.Metadata = {"foo":"bar"}
+```
+
+Moreover it can attached to Parquet files and loaded back later:
+
+
+```scala
+Seq((1L, "foo"), (2L, "bar"))
+  .toDF("id", "txt")
+  .withColumn("id", $"id".as("", Metadata.fromJson("""{"foo": "bar"}""")))
+  .write.parquet("/tmp/foo")
+
+
+spark.read.parquet("/tmp/foo").schema.headOption.map(_.metadata)
+
+// Option[org.apache.spark.sql.types.Metadata] = Some({"foo":"bar"})
+```
