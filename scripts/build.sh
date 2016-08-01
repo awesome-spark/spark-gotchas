@@ -17,7 +17,12 @@ function toc {
 		pandoc $TOC_OPTS $f -o $OUTPUTDIR/$FILENAME.toc ;
 		sed -i "s@#@$f#@g"  $OUTPUTDIR/$FILENAME.toc ;
 	done ;
-	cat $OUTPUTDIR/*.toc > $BASEDIR/README.md ;
+	echo "# Spark Gotchas" > $BASEDIR/README.md;
+	echo "## Table of Contents" >> $BASEDIR/README.md;
+	cat $OUTPUTDIR/*.toc >> $BASEDIR/README.md;
+	echo "" >> $BASEDIR/README.md;
+	echo "## License" >> $BASEDIR/README.md;
+	tail -n+2 $BASEDIR/LICENSE.md >> $BASEDIR/README.md;
 	rm  $OUTPUTDIR/*.toc
 }
 
