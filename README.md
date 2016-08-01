@@ -1,3 +1,5 @@
+# Spark Gotchas
+## Table of Contents
 -   [Introduction](00_introduction.md#introduction)
 -   [Understanding Spark
     Architecture](01_understanding_spark_architecure.md#understanding-spark-architecture)
@@ -55,3 +57,9 @@
         -   [PySpark and Kryo](09_serialization.md#pyspark-and-kryo)
     -   [SerDe During JVM - Guest
         Communication](09_serialization.md#serde-during-jvm---guest-communication)
+
+## License
+
+This work, excluding code examples, is licensed under [Creative Commons Attribution-ShareAlike 4.0 International license](LICENSE/CC-SA-BY-4.0.txt).
+
+Accompanying code and code snippets are licensed under [MIT license](LICENSE/MIT.txt).
