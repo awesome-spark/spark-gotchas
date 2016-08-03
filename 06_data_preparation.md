@@ -245,7 +245,6 @@ new MetadataBuilder().putString("foo", "bar").build
 
 Moreover it can attached to Parquet files and loaded back later:
 
-
 ```scala
 Seq((1L, "foo"), (2L, "bar"))
   .toDF("id", "txt")
@@ -256,4 +255,46 @@ Seq((1L, "foo"), (2L, "bar"))
 spark.read.parquet("/tmp/foo").schema.headOption.map(_.metadata)
 
 // Option[org.apache.spark.sql.types.Metadata] = Some({"foo":"bar"})
+```
+
+Metadata can be also accessed directly using Parquet tools:
+
+```scala
+import scala.collection.JavaConverters.{collectionAsScalaIterableConverter, mapAsScalaMapConverter}
+
+import org.apache.parquet.hadoop.ParquetFileReader
+import org.apache.hadoop.fs.{FileSystem, Path}
+import org.apache.hadoop.conf.Configuration
+
+
+val conf = spark.sparkContext.hadoopConfiguration
+
+def getFooters(conf: Configuration, path: String) = {
+  val fs = FileSystem.get(conf)
+  val footers = ParquetFileReader.readAllFootersInParallel(conf, fs.getFileStatus(new Path(path)))
+  footers
+}
+
+def getFileMetadata(conf: Configuration, path: String) = {
+  getFooters(conf, path)
+    .asScala.map(_.getParquetMetadata.getFileMetaData.getKeyValueMetaData.asScala)
+}
+
+getFileMetadata(conf, "/tmp/foo").headOption
+
+// Option[scala.collection.mutable.Map[String,String]] =
+//   Some(Map(org.apache.spark.sql.parquet.row.metadata ->
+//     {"type":"struct","fields":[{"name":"id","type":"long","nullable":false,"metadata":{"foo":"bar"}}
+//     {"name":"txt","type":"string","nullable":true,"metadata":{}}]}))
+```
+
+We can also use extracted footers to write standalone metadata file when needed:
+
+```scala
+import org.apache.parquet.hadoop.ParquetFileWriter
+
+def createMetadata(conf: Configuration, path: String) = {
+  val footers = getFooters(conf, path)
+  ParquetFileWriter.writeMetadataFile(conf, new Path(path), footers)
+}
 ```
