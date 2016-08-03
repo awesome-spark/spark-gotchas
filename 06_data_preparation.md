@@ -190,7 +190,7 @@ model.transform(df).schema[-1].metadata
 ##   'num_attrs': 2}}
 ```
 
-As for now PySpark doesn't support attaching metadata to a single column. It is possible though to use method similar to this one:
+As for now PySpark doesn't support attaching metadata to a single column. It is possible though, to use method similar to this one:
 
 ```python
 import json
@@ -256,6 +256,8 @@ spark.read.parquet("/tmp/foo").schema.headOption.map(_.metadata)
 
 // Option[org.apache.spark.sql.types.Metadata] = Some({"foo":"bar"})
 ```
+
+#### Accessing Metadata Directly
 
 Metadata can be also accessed directly using Parquet tools:
 
