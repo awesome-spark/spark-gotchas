@@ -1,4 +1,5 @@
 # Spark Gotchas
+[![DOI](https://zenodo.org/badge/19086/awesome-spark/spark-gotchas.svg)](https://zenodo.org/badge/latestdoi/19086/awesome-spark/spark-gotchas)
 ## Table of Contents
 -   [Introduction](00_introduction.md#introduction)
 -   [Understanding Spark
