@@ -18,6 +18,7 @@ function toc {
 		sed -i "s@#@$f#@g"  $OUTPUTDIR/$FILENAME.toc ;
 	done ;
 	echo "# Spark Gotchas" > $BASEDIR/README.md;
+	echo "[![DOI](https://zenodo.org/badge/19086/awesome-spark/spark-gotchas.svg)](https://zenodo.org/badge/latestdoi/19086/awesome-spark/spark-gotchas)" >> $BASEDIR/README.md;
 	echo "## Table of Contents" >> $BASEDIR/README.md;
 	cat $OUTPUTDIR/*.toc >> $BASEDIR/README.md;
 	echo "" >> $BASEDIR/README.md;
