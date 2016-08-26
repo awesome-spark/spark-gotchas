@@ -2,6 +2,7 @@
 [![DOI](https://zenodo.org/badge/19086/awesome-spark/spark-gotchas.svg)](https://zenodo.org/badge/latestdoi/19086/awesome-spark/spark-gotchas)
 ## Table of Contents
 -   [Introduction](00_introduction.md#introduction)
+    -   [Version compatibility](00_introduction.md#version-compatibility)
 -   [Understanding Spark
     Architecture](01_understanding_spark_architecure.md#understanding-spark-architecture)
     -   [Lack of Global Shared State and Spark
