@@ -14,6 +14,12 @@
 -   [Spark Application Building](03_spark_application_building.md#spark-application-building)
 -   [RDD actions and Transformations by
     Example](04_rdd_actions_and_transformations_by_example.md#rdd-actions-and-transformations-by-example)
+    -   [Be Smart About groupByKey](04_rdd_actions_and_transformations_by_example.md#be-smart-about-groupbykey)
+        -   [What Exactly Is Wrong With
+            groupByKey](04_rdd_actions_and_transformations_by_example.md#what-exactly-is-wrong-with-groupbykey)
+        -   [How Not to Optimize](04_rdd_actions_and_transformations_by_example.md#how-not-to-optimize)
+        -   [Not All groupBy Methods Are
+            Equal](04_rdd_actions_and_transformations_by_example.md#not-all-groupby-methods-are-equal)
 -   [Spark SQL and Dataset API](05_spark_sql_and_dataset_api.md#spark-sql-and-dataset-api)
     -   [Non-lazy Evaluation in
         `DataFrameReader.load`](05_spark_sql_and_dataset_api.md#non-lazy-evaluation-in-dataframereader.load)
