@@ -87,14 +87,41 @@ rdd.combineByKey(
 )
 ```
 
-So far so good but there is something wrong with this picture. If we check [the old (Spark <= 1.3.0) PySpark implementation](https://github.com/apache/spark/blob/v1.3.0/python/pyspark/rdd.py#L1754-L1781) as well as [the Scala implementation](https://github.com/apache/spark/blob/v2.0.0/core/src/main/scala/org/apache/spark/rdd/PairRDDFunctions.scala#L500-L510) we'll realize that, excluding some optimizations, we just reimplemented `groupByKey`. So no improvement after all.
+So far so good but there is something wrong with this picture. If we check [the old (Spark <= 1.3.0) PySpark implementation](https://github.com/apache/spark/blob/v1.3.0/python/pyspark/rdd.py#L1754-L1781) as well as [the Scala implementation](https://github.com/apache/spark/blob/v2.0.0/core/src/main/scala/org/apache/spark/rdd/PairRDDFunctions.scala#L500-L510) we'll realize that, excluding some optimizations, we just reimplemented `groupByKey`.
 
+Take away message here is simple. Don't try to fix things that aren't broken. The fundamental problem with `groupByKey` is not implementation but a combination of a distributed architecture and contract.
 
 ### Not All groupBy Methods Are Equal
 
+It is important to note that Spark API provides a few methods which suggest `groupBy`-like behavior as described in __Avoid GroupByKey__ but don't exhibit the same behavior or have different semantics.
+
 #### PySpark RDD.groupByKey and SPARK-3074
+
+Since version 1.4 PySpark provides a specialized `groupByKey` operation which has much properties than a naive `combineByKey`. It uses [`ExternalMerger`](https://github.com/apache/spark/blob/branch-2.0/python/pyspark/shuffle.py#L140) and [`ExternalGroupBy`](https://github.com/apache/spark/blob/branch-2.0/python/pyspark/shuffle.py#L660) to deal with data which exceeds defined memory limits. If needed data can sorted and dumped to disk. While overall it is still an expensive operation it is much more stable in practice.
+
+It also exposes grouped data as a lazy collection (subclass of `collections.Iterable`).
 
 #### DataFrame.groupBy
 
+In general `groupBy` on is equivalent to standard `combineByKey` and doesn't physically group data. Based on the execution plan for a simple aggregation:
 
+
+```scala
+rdd.toDF("k", "v").groupBy("k").agg(sum("v")).queryExecution.executedPlan
+
+// *HashAggregate(keys=[k#41], functions=[sum(cast(v#42 as double))], output=[k#41, sum(v)#50])
+// +- Exchange hashpartitioning(k#41, 200)
+//    +- *HashAggregate(keys=[k#41], functions=[partial_sum(cast(v#42 as double))], output=[k#41, sum#55])
+//       +- *Project [_1#38 AS k#41, _2#39 AS v#42]
+//          +- Scan ExistingRDD[_1#38,_2#39]
+```
+
+we can see that `sum` is expressed as `partial_sum` followed by `shuffle` followed by `sum`.
+
+It is worth noting that functions like `collect_list` or `collect_set` don't use these optimizations and are effectively equivalent to `groupByKey`.
+
+
+#### Dataset.groupByKey
+
+Excluding certain `Dataset` specific optimizations `groupByKey` is comparable to it's RDD counterpart but, similarly to PySpark `RDD.groupByKey`, exposes grouped data as a lazy data structure and can be preferable when expected number of values per key is large.
 
