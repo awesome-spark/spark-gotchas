@@ -20,6 +20,8 @@
         -   [How Not to Optimize](04_rdd_actions_and_transformations_by_example.md#how-not-to-optimize)
         -   [Not All groupBy Methods Are
             Equal](04_rdd_actions_and_transformations_by_example.md#not-all-groupby-methods-are-equal)
+        -   [When to Use groupByKey and When to Avoid
+            It](04_rdd_actions_and_transformations_by_example.md#when-to-use-groupbykey-and-when-to-avoid-it)
 -   [Spark SQL and Dataset API](05_spark_sql_and_dataset_api.md#spark-sql-and-dataset-api)
     -   [Non-lazy Evaluation in
         `DataFrameReader.load`](05_spark_sql_and_dataset_api.md#non-lazy-evaluation-in-dataframereader.load)

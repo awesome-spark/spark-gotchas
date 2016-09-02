@@ -125,3 +125,22 @@ It is worth noting that functions like `collect_list` or `collect_set` don't use
 
 Excluding certain `Dataset` specific optimizations `groupByKey` is comparable to it's RDD counterpart but, similarly to PySpark `RDD.groupByKey`, exposes grouped data as a lazy data structure and can be preferable when expected number of values per key is large.
 
+### When to Use groupByKey and When to Avoid It
+
+#### When to Avoid groupByKey
+
+- If operataion is expressed using `groupByKey` followed by associative and commutative reducing operation on values (`sum`, `count`, `max` / `min`) it should be replaced by `reduceByKey`.
+- If operation can be expressed using a comination of local sequence operation and merge operation (online variance / mean, top-n observations) it should be expressed with `combineByKey` or `aggregateByKey`.
+- If final goal is to traverse values in a specific order (`groupByKey` followed by sorting values followed by iteration) it can be typically rewritten as `repartitionAndSortWithinPartitions` with custom partitioner and ordering followed by `mapPartitions`.
+
+#### When to Use groupByKey
+
+- If operation has similar semantics to `groupByKey` (doesn't reduce amount of data, doesn't benefit from map side combine) it is typcially better to use `groupByKey`.
+
+#### When to Optimize groupByKey
+
+There are legitimate cases that can benefit from implementing `groupBy`-like operations from scratch.
+
+For example if keys are large compared to aggregated values we prefer to enable map side combine to reduce amount of data that will shuffled.
+
+Similarly, if we have some a priori knowledge about the data we can use specialized data structures to encode observations. For example we can use [run-length encoding](https://en.wikipedia.org/wiki/Run-length_encoding) to handle multidimensional values with low cardinality of individual dimensions.
