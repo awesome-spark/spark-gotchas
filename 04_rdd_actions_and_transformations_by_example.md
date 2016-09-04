@@ -144,3 +144,7 @@ There are legitimate cases that can benefit from implementing `groupBy`-like ope
 For example if keys are large compared to aggregated values we prefer to enable map side combine to reduce amount of data that will shuffled.
 
 Similarly, if we have some a priori knowledge about the data we can use specialized data structures to encode observations. For example we can use [run-length encoding](https://en.wikipedia.org/wiki/Run-length_encoding) to handle multidimensional values with low cardinality of individual dimensions.
+
+### Hidden groupByKey
+
+We should remember that Spark API provides other methods which either use `groupByKey` directly or have similar limiations. The most notable examples are `cogroup` and `join` on RDDs. While exact implementation differs between language (Scala implements `PairRDDFunctions.join` using `cogroup` and provides specialized `CoGroupedRDD` while Python implements both `RDD.join` and `RDD.cogroup` via `RDD.groupByKey`) overall performance implications are comparable to using `groupByKey` directly.
