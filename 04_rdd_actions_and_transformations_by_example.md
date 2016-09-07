@@ -148,3 +148,62 @@ Similarly, if we have some a priori knowledge about the data we can use speciali
 ### Hidden groupByKey
 
 We should remember that Spark API provides other methods which either use `groupByKey` directly or have similar limiations. The most notable examples are `cogroup` and `join` on RDDs. While exact implementation differs between language (Scala implements `PairRDDFunctions.join` using `cogroup` and provides specialized `CoGroupedRDD` while Python implements both `RDD.join` and `RDD.cogroup` via `RDD.groupByKey`) overall performance implications are comparable to using `groupByKey` directly.
+
+## Immutability of a Data Structure Does Not Imply Immutability of the Data
+
+While distributed data structures (`RDDs`, `Datasets`) are immutable, ensuring that functions operating on the data are either side effect free or idempotent, is user responsibility. As a rule of thumb mutable state should be used only in the context in which it is explicitly allowed. In practice it means global or `byKey` aggregations with neutral element (`fold` / `foldByKey`, `aggregate` / `aggregateByKey`) or combiner.
+
+Let's illustrate that with a simple vector summation example. A correct solution, using mutable buffer, can be expressed as follows:
+
+```scala
+import breeze.linalg.Dense
+
+val rdd = sc.parallelize(Seq(DenseVector(1, 1), DenseVector(1, 1)), 1)
+rdd.fold(DenseVector(0, 0))(_ += _)
+
+// breeze.linalg.DenseVector[Int] = DenseVector(2, 2)
+```
+
+It can be tempting to express the logic using simple `reduce`. At the first glance it looks OK:
+
+```scala
+val rdd = sc.parallelize(Seq(DenseVector(1, 1), DenseVector(1, 1)), 1)
+rdd.reduce(_ += _)
+
+// breeze.linalg.DenseVector[Int] = DenseVector(2, 2)
+```
+
+and seems to work even just fine even if we repeat operation multiple times:
+
+```scala
+rdd.reduce(_ += _)
+// breeze.linalg.DenseVector[Int] = DenseVector(2, 2)
+
+rdd.reduce(_ += _)
+// breeze.linalg.DenseVector[Int] = DenseVector(2, 2)
+```
+
+Now let's check what happens if we cache data:
+
+```scala
+rdd.cache
+
+rdd.reduce(_ += _)
+// breeze.linalg.DenseVector[Int] = DenseVector(2, 2)
+
+rdd.reduce(_ += _)
+// breeze.linalg.DenseVector[Int] = DenseVector(3, 3)
+
+rdd.reduce(_ += _)
+// breeze.linalg.DenseVector[Int] = DenseVector(4, 4)
+
+rdd.first
+// breeze.linalg.DenseVector[Int] = DenseVector(4, 4)
+```
+
+As you can see data has been modified and each execution yields different results. In practice outcomes can be nondeterministic if data is not fully cached in memory or has been evicted from cache.
+
+Behavior described above is of course not limited to aggregations and any operation mutating data in place can lead to similar problems.
+
+
+
