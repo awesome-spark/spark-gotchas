@@ -205,5 +205,6 @@ As you can see data has been modified and each execution yields different result
 
 Behavior described above is of course not limited to aggregations and any operation mutating data in place can lead to similar problems.
 
+__Note__:
 
-
+Problems described in this section are JVM specific. Due to indirect caching mechanism PySpark applications provide much stronger isolation. Nevertheless we shouldn't depend on that in general and we should apply the same rules as in Scala.
