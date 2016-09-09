@@ -68,6 +68,9 @@
         -   [PySpark and Kryo](09_serialization.md#pyspark-and-kryo)
     -   [SerDe During JVM - Guest
         Communication](09_serialization.md#serde-during-jvm---guest-communication)
+-   [External Data Sources - Die or die
+    trying](10_date_timestamps_and_lies.md#external-data-sources---die-or-die-trying)
+    -   [Dates, Timestamps and lies](10_date_timestamps_and_lies.md#dates-timestamps-and-lies)
 
 ## License
 
