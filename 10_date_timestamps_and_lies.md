@@ -102,15 +102,18 @@ df.select(to_date($"lastUpdate").as("lastUpdate"))
 // |2011-05-19|   21|
 // |2011-05-20|    4|
 // |2011-05-21|    2|
+// +----------+-----+
 ```
+
 and
 
 ```scala
 df.select(to_date($"lastUpdate").as("lastUpdate"))
    .groupBy($"lastUpdate").count
-   .orderBy($"lastUpdate").printSchema```
+   .orderBy($"lastUpdate").printSchema
+```
 
-gives the following :
+gives the following:
 
 ```scala
 // root
@@ -119,8 +122,14 @@ gives the following :
 ```
 
 whereas,
+
 ```scala
-df.select(to_date($"lastUpdate").as("lastUpdate")).groupBy($"lastUpdate").count.orderBy($"lastUpdate").filter($"lastUpdate".isNull).show
+df.select(to_date($"lastUpdate").as("lastUpdate"))
+  .groupBy($"lastUpdate")
+  .count
+  .orderBy($"lastUpdate")
+  .filter($"lastUpdate".isNull)
+  .show
 ```
 
 returns nothing :
@@ -143,10 +152,11 @@ has most likely NOT NULL constraint.*
 So let's check our data again,
 
 ```scala
-+--------------------------+---------------+------+-----+---------------------+----------------+
-| Field                    | Type          | Null | Key | Default             | Extra          |
-+--------------------------+---------------+------+-----+---------------------+----------------+
-| lastUpdate               | timestamp     | NO   |     | 0000-00-00 00:00:00 |                |
+// +--------------------------+---------------+------+-----+---------------------+----------------+
+// | Field                    | Type          | Null | Key | Default             | Extra          |
+// +--------------------------+---------------+------+-----+---------------------+----------------+
+// | lastUpdate               | timestamp     | NO   |     | 0000-00-00 00:00:00 |                |
+// +--------------------------+---------------+------+-----+---------------------+----------------+
 ```
 
 The `DataFrame` schema (shown before) is not null, so spark doesn't actually have
@@ -156,7 +166,7 @@ but *what then explains the filter not working ?*
 
 It doesn't work because spark "knows" there are no null values, even thought MySQL lies.
 
-So here is the **solution** :
+So here is the solution:
 
 We have to create a new schema where the field `lastUpdate` is actually `nullable`
 and use it to rebuild Dataframe.
@@ -173,7 +183,7 @@ val schema =  StructType(Seq(StructField("x", IntegerType, false)))
 df.where($"x".isNull).count
 // 1
 
-sqlContext.createDataFrame(df.rdd, schema).where($"x".isNull).count
+spark.createDataFrame(df.rdd, schema).where($"x".isNull).count
 // 0
 ```
 
@@ -181,11 +191,10 @@ We are lying to Spark, and the way to update the old schema changing all the `ti
 can be done by taking fields and modify the problematic ones as followed :
 
 ```scala
-val newSchema: Seq[StructField] = df.schema.map {
-     t => t match {
-       case x if x.dataType.isInstanceOf[TimestampType] => StructField(x.name, x.dataType, true)
-       case y if !y.dataType.isInstanceOf[TimestampType] => y
-     }
-   }
-sqlContext.createDataFrame(products.rdd, StructType(newSchema))
+df.schema.map {
+  case ts @ StructField(_, TimestampType, false, _) => ts.copy(nullable = true)
+  case sf => sf
+}
+
+spark.createDataFrame(products.rdd, StructType(newSchema))
 ```
