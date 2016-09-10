@@ -1,6 +1,8 @@
-# External Data Sources - Die or die trying
+# External Data Sources - Die or Die Trying
 
-### Dates, Timestamps and lies
+## MySQL
+
+### Dates, Timestamps and Lies ('0000-00-00' and '0000-00-00 00:00:00' A.K.A "Zero" Values)
 
 I was working once with some legacy database on MySQL and one of the most common
 problems is actually dealing with dates and timestamps. But so we think.
@@ -22,6 +24,7 @@ USE test;
 SET sql_mode = 'STRICT_TRANS_TABLES';
 CREATE TABLE test (lastUpdate TIMESTAMP DEFAULT '0000-00-00 00:00:00');
 INSERT INTO test VALUES  ('2014-01-01 00:02:02'), ('2016-02-05 11:50:24');
+INSERT IGNORE INTO test VALUES ('1947-01-01 00:00:01');
 INSERT INTO test VALUES ();
 DESCRIBE test;
 " >  /tmp/docker-entrypoint-initdb.d/init.sql
@@ -29,8 +32,9 @@ DESCRIBE test;
 docker run \
     -v /tmp/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d \
     --name some-mysql \
-    -e MYSQL_ROOT_PASSWORD=pwd --rm \
-     -p 3306:3306 \
+    -e MYSQL_ROOT_PASSWORD=pwd \
+    --rm \
+    -p 3306:3306 \
     mysql:5.7
 
 ## +------------+-----------+------+-----+---------------------+-------+
@@ -40,18 +44,21 @@ docker run \
 ## +------------+-----------+------+-----+---------------------+-------+
 ```
 
-Spark doesn't seem to like that :
+Spark doesn't seem to like that:
+
+```shell
+bin/spark-shell --packages mysql:mysql-connector-java:5.1.39
+```
 
 ```scala
-
 val options = Map(
-  "url" -> "jdbc:mysql://127.0.0.1:3306/test".
+  "url" -> "jdbc:mysql://127.0.0.1:3306/test",
   "dbtable" -> "test",
   "user" -> "root", "password" -> "pwd",
   "driver" -> "com.mysql.jdbc.Driver"
 )
 
-spark.read.format("jdbc").options(options + ("url" -> url)).load.show
+spark.read.format("jdbc").options(options).load.show
 
 // java.sql.SQLException: Value '0000-00-00 00:00:00' can not be represented as java.sql.Timestamp
 // 	at com.mysql.jdbc.SQLError.createSQLException(SQLError.java:963)
@@ -88,7 +95,11 @@ So basically, all you have to do is setting this up in the in your data source c
 val params = "zeroDateTimeBehavior=convertToNull"
 val url = s"""${options("url")}?$params"""
 
-// String = jdbc:mysql://127.0.0.1:3306/test?zeroDateTimeBehavior=convertToNul
+// String = jdbc:mysql://127.0.0.1:3306/test?zeroDateTimeBehavior=convertToNull
+
+val df = spark.read.format("jdbc")
+  .options(options + ("url" -> url))
+  .load
 ```
 
 But ***why doesn't casting work ?***

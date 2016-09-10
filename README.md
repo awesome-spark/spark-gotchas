@@ -68,9 +68,12 @@
         -   [PySpark and Kryo](09_serialization.md#pyspark-and-kryo)
     -   [SerDe During JVM - Guest
         Communication](09_serialization.md#serde-during-jvm---guest-communication)
--   [External Data Sources - Die or die
-    trying](10_date_timestamps_and_lies.md#external-data-sources---die-or-die-trying)
-    -   [Dates, Timestamps and lies](10_date_timestamps_and_lies.md#dates-timestamps-and-lies)
+-   [External Data Sources - Die or Die
+    Trying](10_date_timestamps_and_lies.md#external-data-sources---die-or-die-trying)
+    -   [MySQL](10_date_timestamps_and_lies.md#mysql)
+        -   [Dates, Timestamps and Lies ('0000-00-00' and '0000-00-00
+            00:00:00' A.K.A
+            "Zero" Values)](10_date_timestamps_and_lies.md#dates-timestamps-and-lies-0000-00-00-and-0000-00-00-000000-a.k.a-zero-values)
 
 ## License
 
