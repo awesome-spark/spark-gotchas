@@ -13,20 +13,49 @@ So here is the drill. I was reading some data from MySQL. Some columns are of
 type `timestamp` with a default value is "0000-00-00 00:00:00". Something like
 this :
 
-```
-+--------------------------+---------------+---------------------+----------------+
-| Field                    | Type          | Default             | Extra          |
-+--------------------------+---------------+---------------------+----------------+
-| lastUpdate               | timestamp     | 0000-00-00 00:00:00 |                |
-+--------------------------+---------------+---------------------+----------------+
+```bash
+docker pull mysql:5.7
+
+mkdir /tmp/docker-entrypoint-initdb.d
+echo "CREATE DATABASE test;
+USE test;
+SET sql_mode = 'STRICT_TRANS_TABLES';
+CREATE TABLE test (lastUpdate TIMESTAMP DEFAULT '0000-00-00 00:00:00');
+INSERT INTO test VALUES  ('2014-01-01 00:02:02'), ('2016-02-05 11:50:24');
+INSERT INTO test VALUES ();
+DESCRIBE test;
+" >  /tmp/docker-entrypoint-initdb.d/init.sql
+
+docker run \
+    -v /tmp/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d \
+    --name some-mysql \
+    -e MYSQL_ROOT_PASSWORD=pwd --rm \
+     -p 3306:3306 \
+    mysql:5.7
+
+## +------------+-----------+------+-----+---------------------+-------+
+## | Field      | Type      | Null | Key | Default             | Extra |
+## +------------+-----------+------+-----+---------------------+-------+
+## | lastUpdate | timestamp | NO   |     | 0000-00-00 00:00:00 |       |
+## +------------+-----------+------+-----+---------------------+-------+
 ```
 
 Spark doesn't seem to like that :
 
-```
-java.sql.SQLException: Cannot convert value '0000-00-00 00:00:00' from column lastUpdate to TIMESTAMP.
-    at com.mysql.jdbc.SQLError.createSQLException(SQLError.java:1055)
-    [...]
+```scala
+
+val options = Map(
+  "url" -> "jdbc:mysql://127.0.0.1:3306/test".
+  "dbtable" -> "test",
+  "user" -> "root", "password" -> "pwd",
+  "driver" -> "com.mysql.jdbc.Driver"
+)
+
+spark.read.format("jdbc").options(options + ("url" -> url)).load.show
+
+// java.sql.SQLException: Value '0000-00-00 00:00:00' can not be represented as java.sql.Timestamp
+// 	at com.mysql.jdbc.SQLError.createSQLException(SQLError.java:963)
+//  [...]
 ```
 
 ***So how to we deal with that ?***
@@ -55,8 +84,11 @@ And here is a excerpt, at least the one we need:
 
 So basically, all you have to do is setting this up in the in your data source connection configuration url as following :
 
-```
-jdbc:mysql://yourserver:3306/yourdatabase?zeroDateTimeBehavior=convertToNull
+```scala
+val params = "zeroDateTimeBehavior=convertToNull"
+val url = s"""${options("url")}?$params"""
+
+// String = jdbc:mysql://127.0.0.1:3306/test?zeroDateTimeBehavior=convertToNul
 ```
 
 But ***why doesn't casting work ?***
@@ -85,6 +117,7 @@ Well, no, it's not !
 df.select(to_date($"lastUpdate").as("lastUpdate"))
   .groupBy($"lastUpdate").count
   .orderBy($"lastUpdate").show
+
 // +----------+-----+
 // |lastUpdate|count|
 // +----------+-----+
