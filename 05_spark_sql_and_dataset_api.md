@@ -272,7 +272,6 @@ df %>% withColumn("sliding_mean", over(avg(df$value), w))
 
 - in SparkR < 2.0.0 window functions are supported only in raw SQL by calling `sql` method on registered table.
 
-
 ## Reading Data Using JDBC Source
 
 ### Parallelizing Reads
@@ -458,3 +457,13 @@ Conclusions:
 - Consider using specialized (like PostgreSQL `COPY`) or genaric (like Apache Sqoop) bulk import / export tools.
 - Be sure to understand performance implications of different JDBC data source variants, especially when working with production database.
 - Consider using a separate replica for Spark jobs.
+
+## DataFrame Schema Nullablility
+
+### Marking StructFields as Nullable
+
+### Nullable Is not a Constraint
+
+### Nullable Is Used to Optimize Query Plan
+
+### Schema Inference by Reflection
