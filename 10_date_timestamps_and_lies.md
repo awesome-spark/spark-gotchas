@@ -6,7 +6,7 @@
 
 _'0000-00-00' and '0000-00-00 00:00:00' A.K.A "Zero" Values_
 
-__Note__: _This issue is Spark 1.x specific and reproducible in Spark 2.0 due to regression._
+__Note__: _This issue is Spark 1.x specific and not reproducible in Spark 2.0 due to regression._
 
 I was working once with some legacy database on MySQL and one of the most common
 problems is actually dealing with dates and timestamps. But so we think.
