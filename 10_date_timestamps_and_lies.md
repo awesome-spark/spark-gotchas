@@ -149,13 +149,13 @@ whereas,
 df.filter($"lastUpdate".isNull).show
 ```
 
-returns nothing :
+returns nothing:
 
 ```scala
-// +----------+-----+
-// |lastUpdate|count|
-// +----------+-----+
-// +----------+-----+
+// +----------+
+// |lastUpdate|
+// +----------+
+// +----------+
 ```
 
 But the data isn't on MySQL anymore, I have pulled it using the
