@@ -17,7 +17,7 @@ connector, the database; in occurence MySQL and also Spark's in these cases.
 
 So here is the drill. I was reading some data from MySQL. Some columns are of
 type `timestamp` with a default value is "0000-00-00 00:00:00". Something like
-this :
+this:
 
 ```bash
 docker pull mysql:5.7
@@ -77,7 +77,7 @@ a string then dealing with the date through parsing with some
 
 Well, that ~~isn't always~~, is never the best solution.
 
-And here is why :
+And here is why:
 
 Well first, because the MySQL jdbc connector helps setting your driver's class
 inside spark's `jdbc` options allows to deal with this issue in a very clean
@@ -127,9 +127,9 @@ df.printSchema
 //  |-- lastUpdate: timestamp (nullable = false)
 ```
 
-***Is this a spark issue ?***
+***Is this a spark issue?***
 
-Well, no, it's not !
+Well, no, it's not!
 
 ```scala
 df.select(to_date($"lastUpdate").as("lastUpdate"))
@@ -184,7 +184,7 @@ returns nothing :
 But the data isn't on MySQL anymore, I have pulled it using the
 `zeroDateTimeBehavior=convertToNull` argument in the connection URL and I have
 cached it. It's actually converting zeroDateTime to null as you can see in
-group by result we saw above, but why filters aren't working correctly then ?
+group by result we saw above, but why filters aren't working correctly then?
 
 @zero323 comment on that : *When you create data frame it fetches schema from database, and the column used
 has most likely NOT NULL constraint.*
@@ -202,7 +202,7 @@ So let's check our data again,
 The `DataFrame` schema (shown before) is not null, so spark doesn't actually have
 any reason to check if there are nulls out there.
 
-but *what then explains the filter not working ?*
+but *what then explains the filter not working?*
 
 It doesn't work because spark "knows" there are no null values, even thought MySQL lies.
 
@@ -228,7 +228,7 @@ sqlContext.createDataFrame(df.rdd, schema).where($"x".isNull).count
 ```
 
 We are lying to Spark, and the way to update the old schema changing all the `timestamp`s to `nullable`
-can be done by taking fields and modify the problematic ones as followed :
+can be done by taking fields and modify the problematic ones as followed:
 
 ```scala
 df.schema.map {
