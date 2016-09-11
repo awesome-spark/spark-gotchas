@@ -143,22 +143,6 @@ df.select(to_date($"lastUpdate").as("lastUpdate"))
 // +----------+-----+
 ```
 
-and
-
-```scala
-df.select(to_date($"lastUpdate").as("lastUpdate"))
-   .groupBy($"lastUpdate").count
-   .orderBy($"lastUpdate").printSchema
-```
-
-gives the following:
-
-```scala
-// root
-//  |-- lastUpdate: date (nullable = false)
-//  |-- count: long (nullable = false)
-```
-
 whereas,
 
 ```scala
