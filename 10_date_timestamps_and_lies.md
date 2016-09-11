@@ -93,7 +93,7 @@ And here is a excerpt, at least the one we need:
 
 > Since version: 3.1.4
 
-So basically, all you have to do is setting this up in the in your data source connection configuration url as following :
+So basically, all you have to do is setting this up in the in your data source connection configuration url as following:
 
 ```scala
 val params = "zeroDateTimeBehavior=convertToNull"
