@@ -4,6 +4,8 @@
 
 ### Dates, Timestamps and Lies ('0000-00-00' and '0000-00-00 00:00:00' A.K.A "Zero" Values)
 
+_Spark 1.6 specific_.
+
 I was working once with some legacy database on MySQL and one of the most common
 problems is actually dealing with dates and timestamps. But so we think.
 
@@ -58,7 +60,7 @@ val options = Map(
   "driver" -> "com.mysql.jdbc.Driver"
 )
 
-spark.read.format("jdbc").options(options).load.show
+sqlContext.read.format("jdbc").options(options).load.show
 
 // java.sql.SQLException: Value '0000-00-00 00:00:00' can not be represented as java.sql.Timestamp
 // 	at com.mysql.jdbc.SQLError.createSQLException(SQLError.java:963)
@@ -97,7 +99,7 @@ val url = s"""${options("url")}?$params"""
 
 // String = jdbc:mysql://127.0.0.1:3306/test?zeroDateTimeBehavior=convertToNull
 
-val df = spark.read.format("jdbc")
+val df = sqlContext.read.format("jdbc")
   .options(options + ("url" -> url))
   .load
 ```
@@ -114,10 +116,13 @@ df.filter(columns.isNull)
 
 returns zero rows and the schema confirms that the columns is a `timestamp` and that the column contains `null`.
 
-let's take again a look at the `DataFrame`'s schema :
+Let's take a look at the `DataFrame`'s schema:
 
 ```
-|-- lastUpdate: timestamp (nullable = false)
+df.printSchema
+
+// root
+//  |-- lastUpdate: timestamp (nullable = false)
 ```
 
 ***Is this a spark issue ?***
@@ -132,20 +137,9 @@ df.select(to_date($"lastUpdate").as("lastUpdate"))
 // +----------+-----+
 // |lastUpdate|count|
 // +----------+-----+
-// |      null|   10|
-// |2011-03-24|   16|
-// |2011-03-25|    3|
-// |2011-04-03|    1|
-// |2011-04-04|    1|
-// |2011-04-12|    1|
-// |2011-05-14|  283|
-// |2011-05-15|    3|
-// |2011-05-16|    5|
-// |2011-05-17|    6|
-// |2011-05-18|   30|
-// |2011-05-19|   21|
-// |2011-05-20|    4|
-// |2011-05-21|    2|
+// |      null|    2|
+// |2014-01-01|    1|
+// |2016-02-05|    1|
 // +----------+-----+
 ```
 
