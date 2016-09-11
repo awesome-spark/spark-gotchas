@@ -1,6 +1,12 @@
-# External Data Sources - Die or die trying
+# External Data Sources - Die or Die Trying
 
-### Dates, Timestamps and lies
+## MySQL
+
+### Dates, Timestamps and Lies
+
+_'0000-00-00' and '0000-00-00 00:00:00' A.K.A "Zero" Values_
+
+__Note__: _This issue is Spark 1.x specific and reproducible in Spark 2.0 due to regression._
 
 I was working once with some legacy database on MySQL and one of the most common
 problems is actually dealing with dates and timestamps. But so we think.
@@ -11,22 +17,56 @@ connector, the database; in occurence MySQL and also Spark's in these cases.
 
 So here is the drill. I was reading some data from MySQL. Some columns are of
 type `timestamp` with a default value is "0000-00-00 00:00:00". Something like
-this :
+this:
 
-```
-+--------------------------+---------------+---------------------+----------------+
-| Field                    | Type          | Default             | Extra          |
-+--------------------------+---------------+---------------------+----------------+
-| lastUpdate               | timestamp     | 0000-00-00 00:00:00 |                |
-+--------------------------+---------------+---------------------+----------------+
+```bash
+docker pull mysql:5.7
+
+mkdir /tmp/docker-entrypoint-initdb.d
+echo "CREATE DATABASE test;
+USE test;
+SET sql_mode = 'STRICT_TRANS_TABLES';
+CREATE TABLE test (lastUpdate TIMESTAMP DEFAULT '0000-00-00 00:00:00');
+INSERT INTO test VALUES  ('2014-01-01 00:02:02'), ('2016-02-05 11:50:24');
+INSERT IGNORE INTO test VALUES ('1947-01-01 00:00:01');
+INSERT INTO test VALUES ();
+DESCRIBE test;
+" >  /tmp/docker-entrypoint-initdb.d/init.sql
+
+docker run \
+    -v /tmp/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d \
+    --name some-mysql \
+    -e MYSQL_ROOT_PASSWORD=pwd \
+    --rm \
+    -p 3306:3306 \
+    mysql:5.7
+
+## +------------+-----------+------+-----+---------------------+-------+
+## | Field      | Type      | Null | Key | Default             | Extra |
+## +------------+-----------+------+-----+---------------------+-------+
+## | lastUpdate | timestamp | NO   |     | 0000-00-00 00:00:00 |       |
+## +------------+-----------+------+-----+---------------------+-------+
 ```
 
-Spark doesn't seem to like that :
+Spark doesn't seem to like that:
 
+```shell
+bin/spark-shell --packages mysql:mysql-connector-java:5.1.39
 ```
-java.sql.SQLException: Cannot convert value '0000-00-00 00:00:00' from column lastUpdate to TIMESTAMP.
-    at com.mysql.jdbc.SQLError.createSQLException(SQLError.java:1055)
-    [...]
+
+```scala
+val options = Map(
+  "url" -> "jdbc:mysql://127.0.0.1:3306/test",
+  "dbtable" -> "test",
+  "user" -> "root", "password" -> "pwd",
+  "driver" -> "com.mysql.jdbc.Driver"
+)
+
+sqlContext.read.format("jdbc").options(options).load.show
+
+// java.sql.SQLException: Value '0000-00-00 00:00:00' can not be represented as java.sql.Timestamp
+// 	at com.mysql.jdbc.SQLError.createSQLException(SQLError.java:963)
+//  [...]
 ```
 
 ***So how to we deal with that ?***
@@ -37,7 +77,7 @@ a string then dealing with the date through parsing with some
 
 Well, that ~~isn't always~~, is never the best solution.
 
-And here is why :
+And here is why:
 
 Well first, because the MySQL jdbc connector helps setting your driver's class
 inside spark's `jdbc` options allows to deal with this issue in a very clean
@@ -55,8 +95,15 @@ And here is a excerpt, at least the one we need:
 
 So basically, all you have to do is setting this up in the in your data source connection configuration url as following :
 
-```
-jdbc:mysql://yourserver:3306/yourdatabase?zeroDateTimeBehavior=convertToNull
+```scala
+val params = "zeroDateTimeBehavior=convertToNull"
+val url = s"""${options("url")}?$params"""
+
+// String = jdbc:mysql://127.0.0.1:3306/test?zeroDateTimeBehavior=convertToNull
+
+val df = sqlContext.read.format("jdbc")
+  .options(options + ("url" -> url))
+  .load
 ```
 
 But ***why doesn't casting work ?***
@@ -71,37 +118,30 @@ df.filter(columns.isNull)
 
 returns zero rows and the schema confirms that the columns is a `timestamp` and that the column contains `null`.
 
-let's take again a look at the `DataFrame`'s schema :
+Let's take a look at the `DataFrame`'s schema:
 
 ```
-|-- lastUpdate: timestamp (nullable = false)
+df.printSchema
+
+// root
+//  |-- lastUpdate: timestamp (nullable = false)
 ```
 
-***Is this a spark issue ?***
+***Is this a spark issue?***
 
-Well, no, it's not !
+Well, no, it's not!
 
 ```scala
 df.select(to_date($"lastUpdate").as("lastUpdate"))
   .groupBy($"lastUpdate").count
   .orderBy($"lastUpdate").show
+
 // +----------+-----+
 // |lastUpdate|count|
 // +----------+-----+
-// |      null|   10|
-// |2011-03-24|   16|
-// |2011-03-25|    3|
-// |2011-04-03|    1|
-// |2011-04-04|    1|
-// |2011-04-12|    1|
-// |2011-05-14|  283|
-// |2011-05-15|    3|
-// |2011-05-16|    5|
-// |2011-05-17|    6|
-// |2011-05-18|   30|
-// |2011-05-19|   21|
-// |2011-05-20|    4|
-// |2011-05-21|    2|
+// |      null|    2|
+// |2014-01-01|    1|
+// |2016-02-05|    1|
 // +----------+-----+
 ```
 
@@ -144,7 +184,7 @@ returns nothing :
 But the data isn't on MySQL anymore, I have pulled it using the
 `zeroDateTimeBehavior=convertToNull` argument in the connection URL and I have
 cached it. It's actually converting zeroDateTime to null as you can see in
-group by result we saw above, but why filters aren't working correctly then ?
+group by result we saw above, but why filters aren't working correctly then?
 
 @zero323 comment on that : *When you create data frame it fetches schema from database, and the column used
 has most likely NOT NULL constraint.*
@@ -162,7 +202,7 @@ So let's check our data again,
 The `DataFrame` schema (shown before) is not null, so spark doesn't actually have
 any reason to check if there are nulls out there.
 
-but *what then explains the filter not working ?*
+but *what then explains the filter not working?*
 
 It doesn't work because spark "knows" there are no null values, even thought MySQL lies.
 
@@ -183,12 +223,12 @@ val schema =  StructType(Seq(StructField("x", IntegerType, false)))
 df.where($"x".isNull).count
 // 1
 
-spark.createDataFrame(df.rdd, schema).where($"x".isNull).count
+sqlContext.createDataFrame(df.rdd, schema).where($"x".isNull).count
 // 0
 ```
 
 We are lying to Spark, and the way to update the old schema changing all the `timestamp`s to `nullable`
-can be done by taking fields and modify the problematic ones as followed :
+can be done by taking fields and modify the problematic ones as followed:
 
 ```scala
 df.schema.map {
@@ -196,5 +236,5 @@ df.schema.map {
   case sf => sf
 }
 
-spark.createDataFrame(products.rdd, StructType(newSchema))
+sqlContext.createDataFrame(products.rdd, StructType(newSchema))
 ```
