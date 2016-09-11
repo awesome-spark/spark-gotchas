@@ -2,9 +2,11 @@
 
 ## MySQL
 
-### Dates, Timestamps and Lies ('0000-00-00' and '0000-00-00 00:00:00' A.K.A "Zero" Values)
+### Dates, Timestamps and Lies
 
-_Spark 1.6 specific_.
+_'0000-00-00' and '0000-00-00 00:00:00' A.K.A "Zero" Values_
+
+__Note__: _This issue is Spark 1.x specific and reproducible in Spark 2.0 due to regression._
 
 I was working once with some legacy database on MySQL and one of the most common
 problems is actually dealing with dates and timestamps. But so we think.
@@ -221,7 +223,7 @@ val schema =  StructType(Seq(StructField("x", IntegerType, false)))
 df.where($"x".isNull).count
 // 1
 
-spark.createDataFrame(df.rdd, schema).where($"x".isNull).count
+sqlContext.createDataFrame(df.rdd, schema).where($"x".isNull).count
 // 0
 ```
 
@@ -234,5 +236,5 @@ df.schema.map {
   case sf => sf
 }
 
-spark.createDataFrame(products.rdd, StructType(newSchema))
+sqlContext.createDataFrame(products.rdd, StructType(newSchema))
 ```
