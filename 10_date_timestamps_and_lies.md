@@ -146,12 +146,7 @@ df.select(to_date($"lastUpdate").as("lastUpdate"))
 whereas,
 
 ```scala
-df.select(to_date($"lastUpdate").as("lastUpdate"))
-  .groupBy($"lastUpdate")
-  .count
-  .orderBy($"lastUpdate")
-  .filter($"lastUpdate".isNull)
-  .show
+df.filter($"lastUpdate".isNull).show
 ```
 
 returns nothing :
