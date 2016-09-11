@@ -106,8 +106,6 @@ val df = sqlContext.read.format("jdbc")
   .load
 ```
 
-But ***why doesn't casting work ?***
-
 I feel silly saying this, by I've tried casting to string which doesn't seem to work.
 
 Actually I tought that the solution works but...
