@@ -111,7 +111,7 @@ I feel silly saying this, by I've tried casting to string which doesn't seem to 
 Actually I tought that the solution works but...
 
 ```scala
-df.filter(columns.isNull)
+df.filter($"lastUpdate".isNull)
 ```
 
 returns zero rows and the schema confirms that the columns is a `timestamp` and that the column contains `null`.
