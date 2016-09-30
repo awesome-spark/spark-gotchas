@@ -10,6 +10,47 @@
 
 #### Closures Use Standard Java Serialization
 
+#### Common Problems
+
+##### Scala Maps With Defaults
+
+While Kryo serializer can handle basic Scala `Maps`:
+
+
+```scala
+import org.apache.spark.{SparkContext, SparkConf}
+
+val aMap = Map[String, Long]("foo" -> 1).withDefaultValue(0L)
+aMap("bar")
+// Long = 0
+
+val conf = new SparkConf()
+  .setAppName("bar")
+  .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+
+val sc = new SparkContext(conf)
+val rdd = sc.parallelize(Seq(aMap))
+
+rdd.map(_("foo")).first
+// Long = 1
+
+```
+unfortunately it doesn't serialize default arguments:
+
+```scala
+
+rdd.map(_("bar")).first
+
+// 16/09/30 15:20:39 ERROR Executor: Exception in task 2.0 in stage 2.0 (TID 7)
+// java.util.NoSuchElementException: key not found: bar
+//     at scala.collection.MapLike$class.default(MapLike.scala:228)
+//     ...
+```
+
+As [pointed out](https://github.com/jodersky) by [Jakob Odersky](https://github.com/jodersky) this happens due to optimizations introduced in the [Chill](https://github.com/twitter/chill/blob/develop/chill-scala/src/main/scala/com/twitter/chill/Traversable.scala) library.
+
+In general to ensure correct behavior it is better to use safe methods (`get`, `getOrElse`) instead of depending on defaults (`withDefault`, `withDefaultValue`).
+
 ## PySpark Serialization
 
 In general PySpark provides 2-tier serialization mechanism defined by actual serialization engine, like `PickleSerializer`, and batching mechanism. An additional specialized serializer is used to serialize closures. It is important to note that Python classes cannot be serialized. It means that modules containing class definitions have to be accessible on every machine in the cluster.
