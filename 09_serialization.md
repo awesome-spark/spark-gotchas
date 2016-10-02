@@ -47,7 +47,7 @@ rdd.map(_("bar")).first
 //     ...
 ```
 
-As [pointed out](https://github.com/jodersky) by [Jakob Odersky](https://github.com/jodersky) this happens due to optimizations introduced in the [Chill](https://github.com/twitter/chill/blob/develop/chill-scala/src/main/scala/com/twitter/chill/Traversable.scala) library.
+As [pointed out](http://apache-spark-developers-list.1001551.n3.nabble.com/java-util-NoSuchElementException-when-serializing-Map-with-default-value-tp19123p19139.html) by [Jakob Odersky](https://github.com/jodersky) this happens due to optimizations introduced in the [Chill](https://github.com/twitter/chill/blob/develop/chill-scala/src/main/scala/com/twitter/chill/Traversable.scala) library.
 
 In general to ensure correct behavior it is better to use safe methods (`get`, `getOrElse`) instead of depending on defaults (`withDefault`, `withDefaultValue`).
 
