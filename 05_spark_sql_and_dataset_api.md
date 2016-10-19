@@ -273,3 +273,33 @@ df %>% withColumn("sliding_mean", over(avg(df$value), w))
 - in SparkR < 2.0.0 window functions are supported only in raw SQL by calling `sql` method on registered table.
 
 
+## Reading Data Using JDBC Source
+
+### Parallelizing Reads
+
+Apache Spark provides a number of methods which can be used to import data using JDBC connections. When working with `RDD` API we can use [`JdbcRDD`](https://spark.apache.org/docs/latest/api/scala/index.html#org.apache.spark.rdd.JdbcRDD). For `Dataset` API we can choose between different `jdbc` readers. It is important to note that in the latter case reads are not always distributed.
+
+While range based implementation:
+
+```scala
+    jdbc(url: String, table: String, predicates: Array[String], connectionProperties: Properties): DataFrame
+```
+
+and predicate based implementation:
+
+```scala
+def jdbc(url: String, table: String, predicates: Array[String], connectionProperties: Properties): DataFrame
+```
+
+distribute reads between workers, the simplest implementation:
+
+```scala
+def jdbc(url: String, table: String, properties: Properties): DataFrame
+```
+
+as well as `format("jdbc")` followed by `load` delegate reads to a single worker.
+
+This behavior has two main consequences:
+
+- Reads are essentially sequential.
+- Initial data distribution is skewed to a single machine.
