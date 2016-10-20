@@ -93,7 +93,7 @@ And here is a excerpt, at least the one we need:
 
 > Since version: 3.1.4
 
-So basically, all you have to do is setting this up in the in your data source connection configuration url as following :
+So basically, all you have to do is setting this up in the in your data source connection configuration url as following:
 
 ```scala
 val params = "zeroDateTimeBehavior=convertToNull"
@@ -106,14 +106,12 @@ val df = sqlContext.read.format("jdbc")
   .load
 ```
 
-But ***why doesn't casting work ?***
-
 I feel silly saying this, by I've tried casting to string which doesn't seem to work.
 
 Actually I tought that the solution works but...
 
 ```scala
-df.filter(columns.isNull)
+df.filter($"lastUpdate".isNull)
 ```
 
 returns zero rows and the schema confirms that the columns is a `timestamp` and that the column contains `null`.
@@ -145,40 +143,19 @@ df.select(to_date($"lastUpdate").as("lastUpdate"))
 // +----------+-----+
 ```
 
-and
-
-```scala
-df.select(to_date($"lastUpdate").as("lastUpdate"))
-   .groupBy($"lastUpdate").count
-   .orderBy($"lastUpdate").printSchema
-```
-
-gives the following:
-
-```scala
-// root
-//  |-- lastUpdate: date (nullable = false)
-//  |-- count: long (nullable = false)
-```
-
 whereas,
 
 ```scala
-df.select(to_date($"lastUpdate").as("lastUpdate"))
-  .groupBy($"lastUpdate")
-  .count
-  .orderBy($"lastUpdate")
-  .filter($"lastUpdate".isNull)
-  .show
+df.filter($"lastUpdate".isNull).show
 ```
 
-returns nothing :
+returns nothing:
 
 ```scala
-// +----------+-----+
-// |lastUpdate|count|
-// +----------+-----+
-// +----------+-----+
+// +----------+
+// |lastUpdate|
+// +----------+
+// +----------+
 ```
 
 But the data isn't on MySQL anymore, I have pulled it using the
