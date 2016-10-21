@@ -7,7 +7,7 @@ METADATA="metadata.yaml"
 BIBLIOGRAPHY="bibliography.bib"
 CHAPTERS="[0-9]*.md"
 LICENSE="$BASEDIR/LICENSE.md"
-PANDOC_OPTS="--filter pandoc-citeproc --toc --chapters --base-header-level=1 --number-sections"
+PANDOC_OPTS="--highlight-style tango --filter pandoc-citeproc --toc --chapters --base-header-level=1 --number-sections"
 TOC_OPTS="--template=$BASEDIR/templates/toc.txt --toc --chapters --base-header-level=1 -t markdown"
 
 
