@@ -303,3 +303,36 @@ This behavior has two main consequences:
 
 - Reads are essentially sequential.
 - Initial data distribution is skewed to a single machine.
+
+Let's illustrate this behavior with examples. First let's create a simple database:
+
+```shell
+docker pull postgres:9.5
+
+mkdir /tmp/docker-entrypoint-initdb.d
+echo '#!/bin/bash'"
+set -e
+psql -v ON_ERROR_STOP=1 --username "postgres" <<-EOSQL
+    CREATE ROLE spark PASSWORD 'spark' NOSUPERUSER NOCREATEDB NOCREATEROLE INHERIT LOGIN;
+    CREATE DATABASE spark OWNER spark;
+    \\\\c spark
+    CREATE TABLE data (
+      id INTEGER,
+      name TEXT,
+      valid BOOLEAN DEFAULT true,
+      ts TIMESTAMP DEFAULT now()
+    );
+    GRANT ALL PRIVILEGES ON TABLE data TO spark;
+EOSQL
+
+" > /tmp/docker-entrypoint-initdb.d/init-spark-db.sh
+
+docker run \
+    -v /tmp/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d \
+    --name some-postgres \
+    --rm \
+    -p :5432:5432 \
+    postgres:9.5
+```
+
+
