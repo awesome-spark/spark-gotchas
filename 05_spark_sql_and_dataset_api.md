@@ -282,7 +282,7 @@ Apache Spark provides a number of methods which can be used to import data using
 While range based implementation:
 
 ```scala
-    jdbc(url: String, table: String, predicates: Array[String], connectionProperties: Properties): DataFrame
+jdbc(url: String, table: String, predicates: Array[String], connectionProperties: Properties): DataFrame
 ```
 
 and predicate based implementation:
@@ -368,7 +368,7 @@ df.rdd.partitions.size
 // Int = 1
 ```
 
-As you can see there is only one partition created. While this experiment is not exactly reliable due to low number of records you can easily check that this behavior holds indpendent of the number of rows to be fetched (subsequent examples assume that we have only four records shown above):
+As you can see there is only one partition created. While this experiment is not exactly reliable due to low number of records you can easily check that this behavior holds independent of the number of rows to be fetched (subsequent examples assume that we have only four records shown above):
 
 ```scala
 val newData = spark.range(1000000)
@@ -431,3 +431,11 @@ dfPartitionedWithPreds.rdd.glom.collect
 //   Array([1,foo,true,2012-01-01 00:03:00.0], [3,bar,true,2015-11-02 22:00:00.0]),
 //   Array([2,foo,false,2013-04-02 10:10:00.0], [4,bar,false,2010-11-02 22:00:00.0]))
 ```
+
+Compared to the basic reader these methods load data in a distributed mode but introduce a couple of problems:
+
+- High number of concurrent reads can easily trothle the database.
+- Every executor loads data using separate transaction so when operating on live databse it is not possible to guarantee consitent view.
+- We need a set of mutually exclusive predicates to avoid duplicates.
+- To get all relevant records we have to carefully adjust lower and upper bounds or predicates. For example `predicates` show above wouldn't include records with `valid` being `NULL`.
+
