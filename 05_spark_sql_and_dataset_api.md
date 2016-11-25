@@ -355,13 +355,14 @@ bin/spark-shell --master "local[4]" --packages org.postgresql:postgresql:9.4.121
 And load the table:
 
 ```scala
-val df = spark.read.format("jdbc").options(Map(
+val options = Map(
   "url" -> "jdbc:postgresql://127.0.0.1:5432/spark",
   "dbtable" -> "data",
   "driver" -> "org.postgresql.Driver",
   "user" -> "spark",
   "password" -> "spark"
-)).load
+)
+val df = spark.read.format("jdbc").options(options).load
 
 df.rdd.partitions.size
 // Int = 1
@@ -369,10 +370,28 @@ df.rdd.partitions.size
 
 As you can see there is only one partition created. While this experiment is not exactly reliable due to low number of records you can easily check that this behavior holds indpendent of the number of rows to be fetched.
 
+```scala
+val newData = spark.range(1000000)
+  .select($"id", lit(""), lit(true), current_timestamp())
+  .toDF("id", "name", "valid", "ts")
+
+newData.write.format("jdbc").options(options)  .mode("append") .save
+```
 Since we enabled query logging in our database we can further confirm that by executing:
 
 ```scala`
 df.rdd.foreach(_ => ())
 ```
 
-and checking the logs.
+and checking database logs. You should see only one `SELECT` statement executed against `data` table.
+
+This behavior has a number of positive and negative consequences. Positive ones:
+
+- It doesn't induce significant stress on the input source.
+- It keeps consistent view of the input data (all records can be fetched in the same transactions).
+
+Negative ones:
+
+- It doesn't utilize cluster resources.
+- Results in the highest possible data skew.
+- Can easily overwhelm the single executor which has been choosen to fetch the data.
