@@ -310,9 +310,13 @@ Let's illustrate this behavior with examples. First let's create a simple databa
 docker pull postgres:9.5
 
 mkdir /tmp/docker-entrypoint-initdb.d
-echo '#!/bin/bash'"
+ENTRY='#!/bin/bash'"
 set -e
-psql -v ON_ERROR_STOP=1 --username "postgres" <<-EOSQL
+
+echo \"log_statement = 'all'\" >> /var/lib/postgresql/data/postgresql.conf
+
+psql -v ON_ERROR_STOP=1 --username 'postgres' <<-EOSQL
+    SELECT pg_reload_conf();
     CREATE ROLE spark PASSWORD 'spark' NOSUPERUSER NOCREATEDB NOCREATEROLE INHERIT LOGIN;
     CREATE DATABASE spark OWNER spark;
     \\\\c spark
@@ -323,9 +327,16 @@ psql -v ON_ERROR_STOP=1 --username "postgres" <<-EOSQL
       ts TIMESTAMP DEFAULT now()
     );
     GRANT ALL PRIVILEGES ON TABLE data TO spark;
-EOSQL
 
-" > /tmp/docker-entrypoint-initdb.d/init-spark-db.sh
+    INSERT INTO data VALUES
+        (1, 'foo', TRUE, '2012-01-01 00:03:00'),
+        (2, 'foo', FALSE, '2013-04-02 10:10:00'),
+        (3, 'bar', TRUE, '2015-11-02 22:00:00'),
+        (4, 'bar', FALSE, '2010-11-02 22:00:00');
+EOSQL
+"
+
+printf "%s" $ENTRY > /tmp/docker-entrypoint-initdb.d/init-spark-db.sh
 
 docker run \
     -v /tmp/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d \
@@ -335,4 +346,33 @@ docker run \
     postgres:9.5
 ```
 
+and start Spark loading JDBC driver:
 
+```shell
+bin/spark-shell --master "local[4]" --packages org.postgresql:postgresql:9.4.1212
+```
+
+And load the table:
+
+```scala
+val df = spark.read.format("jdbc").options(Map(
+  "url" -> "jdbc:postgresql://127.0.0.1:5432/spark",
+  "dbtable" -> "data",
+  "driver" -> "org.postgresql.Driver",
+  "user" -> "spark",
+  "password" -> "spark"
+)).load
+
+df.rdd.partitions.size
+// Int = 1
+```
+
+As you can see there is only one partition created. While this experiment is not exactly reliable due to low number of records you can easily check that this behavior holds indpendent of the number of rows to be fetched.
+
+Since we enabled query logging in our database we can further confirm that by executing:
+
+```scala`
+df.rdd.foreach(_ => ())
+```
+
+and checking the logs.
