@@ -368,7 +368,7 @@ df.rdd.partitions.size
 // Int = 1
 ```
 
-As you can see there is only one partition created. While this experiment is not exactly reliable due to low number of records you can easily check that this behavior holds indpendent of the number of rows to be fetched.
+As you can see there is only one partition created. While this experiment is not exactly reliable due to low number of records you can easily check that this behavior holds indpendent of the number of rows to be fetched (subsequent examples assume that we have only four records shown above):
 
 ```scala
 val newData = spark.range(1000000)
@@ -395,3 +395,39 @@ Negative ones:
 - It doesn't utilize cluster resources.
 - Results in the highest possible data skew.
 - Can easily overwhelm the single executor which has been choosen to fetch the data.
+
+As mentioned above Spark provides two methods which be used for distributed data loading over JDBC. The first one partitions data using an integer column:
+
+```scala
+val dfPartitionedWithRanges = spark.read.options(options)
+  .jdbc(options("url"), options("dbtable"), "id", 1, 5, 4, new java.util.Properties())
+
+dfPartitionedWithRanges.rdd.partitions.size
+// Int = 4
+
+dfPartitionedWithRanges.rdd.glom.collect
+// Array[Array[org.apache.spark.sql.Row]] = Array(
+//   Array([1,foo,true,2012-01-01 00:03:00.0]),
+//   Array([2,foo,false,2013-04-02 10:10:00.0]),
+//   Array([3,bar,true,2015-11-02 22:00:00.0]),
+//   Array([4,bar,false,2010-11-02 22:00:00.0]))
+```
+
+The second one uses a sequence of predicates:
+
+```scala
+val predicates = Array(
+  "valid", "NOT valid"
+)
+
+val dfPartitionedWithPreds = spark.read.options(options)
+  .jdbc(options("url"), options("dbtable"), predicates, new java.util.Properties())
+
+dfPartitionedWithPreds.rdd.partitions.size
+// Int = 2
+
+dfPartitionedWithPreds.rdd.glom.collect
+// Array[Array[org.apache.spark.sql.Row]] = Array(
+//   Array([1,foo,true,2012-01-01 00:03:00.0], [3,bar,true,2015-11-02 22:00:00.0]),
+//   Array([2,foo,false,2013-04-02 10:10:00.0], [4,bar,false,2010-11-02 22:00:00.0]))
+```
