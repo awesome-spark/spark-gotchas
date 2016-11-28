@@ -336,7 +336,7 @@ psql -v ON_ERROR_STOP=1 --username 'postgres' <<-EOSQL
 EOSQL
 "
 
-printf "%s" $ENTRY > /tmp/docker-entrypoint-initdb.d/init-spark-db.sh
+printf "%s" "$ENTRY" > /tmp/docker-entrypoint-initdb.d/init-spark-db.sh
 
 docker run \
     -v /tmp/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d \
