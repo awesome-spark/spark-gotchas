@@ -297,7 +297,7 @@ distribute reads between workers, the simplest implementation:
 def jdbc(url: String, table: String, properties: Properties): DataFrame
 ```
 
-as well as `format("jdbc")` followed by `load` delegate reads to a single worker.
+as well as `format("jdbc")` followed by `load` (with a single exception shown below), delegate reads to a single worker.
 
 This behavior has two main consequences:
 
@@ -375,7 +375,7 @@ val newData = spark.range(1000000)
   .select($"id", lit(""), lit(true), current_timestamp())
   .toDF("id", "name", "valid", "ts")
 
-newData.write.format("jdbc").options(options)  .mode("append") .save
+newData.write.format("jdbc").options(options).mode("append") .save
 ```
 Since we enabled query logging in our database we can further confirm that by executing:
 
@@ -413,7 +413,20 @@ dfPartitionedWithRanges.rdd.glom.collect
 //   Array([4,bar,false,2010-11-02 22:00:00.0]))
 ```
 
-The second one uses a sequence of predicates:
+Partition column and bounds can provided using `options` as well:
+
+```scala
+val optionsWithBounds = options ++ Map(
+  "partitionColumn" -> "id",
+  "lowerBound" -> "1",
+  "upperBound" -> "5",
+  "numPartitions" -> "4"
+)
+
+spark.read.options(optionsWithBounds).format("jdbc").load
+```
+
+Another option we have is to use a sequence of predicates:
 
 ```scala
 val predicates = Array(
@@ -439,3 +452,9 @@ Compared to the basic reader these methods load data in a distributed mode but i
 - We need a set of mutually exclusive predicates to avoid duplicates.
 - To get all relevant records we have to carefully adjust lower and upper bounds or predicates. For example `predicates` show above wouldn't include records with `valid` being `NULL`.
 
+Conclusions:
+
+- If available, consider using specialized data sources over JDBC connections.
+- Consider using specialized (like PostgreSQL `COPY`) or genaric (like Apache Sqoop) bulk import / export tools.
+- Be sure to understand performance implications of different JDBC data source variants, especially when working with production database.
+- Consider using a separate replica for Spark jobs.
