@@ -1,4 +1,4 @@
-# Small deployments and dynamic allocation [WIP]
+# Small deployments and dynamic allocation
 
 ## Dynamic Alloaction with Yet Another Dynamic Resource Allocation YA(D)RN
 
