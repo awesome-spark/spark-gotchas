@@ -42,9 +42,6 @@
         -   [Example Usage](05_spark_sql_and_dataset_api.md#example-usage)
         -   [Requirements and Performance
             Considerations](05_spark_sql_and_dataset_api.md#requirements-and-performance-considerations)
-    -   [Reading Data Using JDBC
-        Source](05_spark_sql_and_dataset_api.md#reading-data-using-jdbc-source)
-        -   [Parallelizing Reads](05_spark_sql_and_dataset_api.md#parallelizing-reads)
     -   [DataFrame Schema Nullablility](05_spark_sql_and_dataset_api.md#dataframe-schema-nullablility)
         -   [Marking StructFields as
             Nullable](05_spark_sql_and_dataset_api.md#marking-structfields-as-nullable)
@@ -54,6 +51,9 @@
             Plan](05_spark_sql_and_dataset_api.md#nullable-is-used-to-optimize-query-plan)
         -   [Schema Inference by
             Reflection](05_spark_sql_and_dataset_api.md#schema-inference-by-reflection)
+    -   [Reading Data Using JDBC
+        Source](05_spark_sql_and_dataset_api.md#reading-data-using-jdbc-source)
+        -   [Parallelizing Reads](05_spark_sql_and_dataset_api.md#parallelizing-reads)
 -   [Data Preparation](06_data_preparation.md#data-preparation)
     -   [DataFrame Metadata](06_data_preparation.md#dataframe-metadata)
         -   [Metadata in ML pipelines](06_data_preparation.md#metadata-in-ml-pipelines)

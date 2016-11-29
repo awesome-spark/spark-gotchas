@@ -272,6 +272,29 @@ df %>% withColumn("sliding_mean", over(avg(df$value), w))
 
 - in SparkR < 2.0.0 window functions are supported only in raw SQL by calling `sql` method on registered table.
 
+## DataFrame Schema Nullablility
+
+`org.apache.spark.sql.types.StructField` takes `nullable` argument that can be confusing for users which are used to RDBMS and can have unexpected runtime implications. Typically it is set automatically based on the few simple rules:
+
+- If `DataFrame` is created from a local collection or RDD columns inherit nullability semantics of the input data:
+
+  - If input type cannot be `null` (for example Scala numeric types) then `nullable` is set to `false`.
+  - If input type can be `null` (Java boxed numerics, `String`) then `nullable` is set to `false`.
+
+- Optional values are always nullable with `None` mapped to SQL `NULL`.
+
+- If data is loaded from a source which doesn't support nullability constraints, like csv or JSON, fields are marked as `nullable`, even when [coressponding Scala type](https://spark.apache.org/docs/latest/sql-programming-guide.html#data-types) is not.
+
+- Columns created from Python objects are always marked as `nullable`.
+
+### Marking StructFields as Nullable
+
+### Nullable Is not a Constraint
+
+### Nullable Is Used to Optimize Query Plan
+
+### Schema Inference by Reflection
+
 ## Reading Data Using JDBC Source
 
 ### Parallelizing Reads
@@ -458,12 +481,3 @@ Conclusions:
 - Be sure to understand performance implications of different JDBC data source variants, especially when working with production database.
 - Consider using a separate replica for Spark jobs.
 
-## DataFrame Schema Nullablility
-
-### Marking StructFields as Nullable
-
-### Nullable Is not a Constraint
-
-### Nullable Is Used to Optimize Query Plan
-
-### Schema Inference by Reflection
