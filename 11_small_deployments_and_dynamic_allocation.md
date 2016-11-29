@@ -1,6 +1,6 @@
 # Small deployments and dynamic allocation
 
-## Dynamic Alloaction with Yet Another Dynamic Resource Allocation YA(D)RN
+## Yet Another Dynamic Resource Allocation YA(D)RN
 
 Let's talk a bit about dynamic allocation with YARN. So in YARN terminology, executors and application masters run inside “containers”.
 Spark offers yarn specific properties so you can run your application :
