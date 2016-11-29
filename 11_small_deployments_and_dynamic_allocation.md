@@ -1,8 +1,6 @@
 # Small deployments and dynamic allocation [WIP]
 
-## Dynamic Allocation
-
-### Yet Another Dynamic Resource Allocation YA(D)RN
+## Dynamic Alloaction with Yet Another Dynamic Resource Allocation YA(D)RN
 
 Let's talk a bit about dynamic allocation with YARN. So in YARN terminology, executors and application masters run inside “containers”.
 Spark offers yarn specific properties so you can run your application :
@@ -12,11 +10,7 @@ Spark offers yarn specific properties so you can run your application :
 
 So it's not about storing data, it's just the resources needed for YARN to run properly.
 
-In some cases,
-
-----------
-
-**e.g** if you enable `dynamicAllocation` you might want to set these properties explicitly along with the maximum number of executor (`spark.dynamicAllocation.maxExecutors`) that can be created during the process which can easily overwhelm YARN by asking for thousands of executors and thus loosing the already running executors.
+In some cases, **e.g** if you enable `dynamicAllocation` you might want to set these properties explicitly along with the maximum number of executor (`spark.dynamicAllocation.maxExecutors`) that can be created during the process which can easily overwhelm YARN by asking for thousands of executors and thus loosing the already running executors.
 
 - `spark.dynamicAllocation.maxExecutors` is set to infinity by default which set the upper bound for the number of executors if dynamic allocation is enabled. Ref. [Official documentation - Configuration](http://spark.apache.org/docs/latest/configuration.html#dynamic-allocation).
 
@@ -27,7 +21,5 @@ Increasing the target number of executors happens in response to backlogged task
 This can lead into an exponential increase of the number of executors in some cases which can break the YARN resource manager. In my case :
 
 ```16/03/31 07:15:44 INFO ExecutorAllocationManager: Requesting 8000 new executors because tasks are backlogged (new desired total will be 40000)```
-
-----------
 
 This doesn't cover all the use case which one can use those property, but it gives a general idea about how it's been used.
