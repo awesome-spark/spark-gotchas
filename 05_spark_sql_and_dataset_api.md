@@ -273,3 +273,188 @@ df %>% withColumn("sliding_mean", over(avg(df$value), w))
 - in SparkR < 2.0.0 window functions are supported only in raw SQL by calling `sql` method on registered table.
 
 
+## Reading Data Using JDBC Source
+
+### Parallelizing Reads
+
+Apache Spark provides a number of methods which can be used to import data using JDBC connections. When working with `RDD` API we can use [`JdbcRDD`](https://spark.apache.org/docs/latest/api/scala/index.html#org.apache.spark.rdd.JdbcRDD). For `Dataset` API we can choose between different `jdbc` readers. It is important to note that in the latter case reads are not always distributed.
+
+While range based implementation:
+
+```scala
+jdbc(url: String, table: String, predicates: Array[String], connectionProperties: Properties): DataFrame
+```
+
+and predicate based implementation:
+
+```scala
+def jdbc(url: String, table: String, predicates: Array[String], connectionProperties: Properties): DataFrame
+```
+
+distribute reads between workers, the simplest implementation:
+
+```scala
+def jdbc(url: String, table: String, properties: Properties): DataFrame
+```
+
+as well as `format("jdbc")` followed by `load` (with a single exception shown below), delegate reads to a single worker.
+
+This behavior has two main consequences:
+
+- Reads are essentially sequential.
+- Initial data distribution is skewed to a single machine.
+
+Let's illustrate this behavior with examples. First let's create a simple database:
+
+```shell
+docker pull postgres:9.5
+
+mkdir /tmp/docker-entrypoint-initdb.d
+ENTRY='#!/bin/bash'"
+set -e
+
+echo \"log_statement = 'all'\" >> /var/lib/postgresql/data/postgresql.conf
+
+psql -v ON_ERROR_STOP=1 --username 'postgres' <<-EOSQL
+    SELECT pg_reload_conf();
+    CREATE ROLE spark PASSWORD 'spark' NOSUPERUSER NOCREATEDB NOCREATEROLE INHERIT LOGIN;
+    CREATE DATABASE spark OWNER spark;
+    \\\\c spark
+    CREATE TABLE data (
+      id INTEGER,
+      name TEXT,
+      valid BOOLEAN DEFAULT true,
+      ts TIMESTAMP DEFAULT now()
+    );
+    GRANT ALL PRIVILEGES ON TABLE data TO spark;
+
+    INSERT INTO data VALUES
+        (1, 'foo', TRUE, '2012-01-01 00:03:00'),
+        (2, 'foo', FALSE, '2013-04-02 10:10:00'),
+        (3, 'bar', TRUE, '2015-11-02 22:00:00'),
+        (4, 'bar', FALSE, '2010-11-02 22:00:00');
+EOSQL
+"
+
+printf "%s" "$ENTRY" > /tmp/docker-entrypoint-initdb.d/init-spark-db.sh
+
+docker run \
+    -v /tmp/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d \
+    --name some-postgres \
+    --rm \
+    -p :5432:5432 \
+    postgres:9.5
+```
+
+and start Spark loading JDBC driver:
+
+```shell
+bin/spark-shell --master "local[4]" --packages org.postgresql:postgresql:9.4.1212
+```
+
+And load the table:
+
+```scala
+val options = Map(
+  "url" -> "jdbc:postgresql://127.0.0.1:5432/spark",
+  "dbtable" -> "data",
+  "driver" -> "org.postgresql.Driver",
+  "user" -> "spark",
+  "password" -> "spark"
+)
+val df = spark.read.format("jdbc").options(options).load
+
+df.rdd.partitions.size
+// Int = 1
+```
+
+As you can see there is only one partition created. While this experiment is not exactly reliable due to low number of records you can easily check that this behavior holds independent of the number of rows to be fetched (subsequent examples assume that we have only four records shown above):
+
+```scala
+val newData = spark.range(1000000)
+  .select($"id", lit(""), lit(true), current_timestamp())
+  .toDF("id", "name", "valid", "ts")
+
+newData.write.format("jdbc").options(options).mode("append") .save
+```
+Since we enabled query logging in our database we can further confirm that by executing:
+
+```scala`
+df.rdd.foreach(_ => ())
+```
+
+and checking database logs. You should see only one `SELECT` statement executed against `data` table.
+
+This behavior has a number of positive and negative consequences. Positive ones:
+
+- It doesn't induce significant stress on the input source.
+- It keeps consistent view of the input data (all records can be fetched in the same transactions).
+
+Negative ones:
+
+- It doesn't utilize cluster resources.
+- Results in the highest possible data skew.
+- Can easily overwhelm the single executor which has been choosen to fetch the data.
+
+As mentioned above Spark provides two methods which be used for distributed data loading over JDBC. The first one partitions data using an integer column:
+
+```scala
+val dfPartitionedWithRanges = spark.read.options(options)
+  .jdbc(options("url"), options("dbtable"), "id", 1, 5, 4, new java.util.Properties())
+
+dfPartitionedWithRanges.rdd.partitions.size
+// Int = 4
+
+dfPartitionedWithRanges.rdd.glom.collect
+// Array[Array[org.apache.spark.sql.Row]] = Array(
+//   Array([1,foo,true,2012-01-01 00:03:00.0]),
+//   Array([2,foo,false,2013-04-02 10:10:00.0]),
+//   Array([3,bar,true,2015-11-02 22:00:00.0]),
+//   Array([4,bar,false,2010-11-02 22:00:00.0]))
+```
+
+Partition column and bounds can provided using `options` as well:
+
+```scala
+val optionsWithBounds = options ++ Map(
+  "partitionColumn" -> "id",
+  "lowerBound" -> "1",
+  "upperBound" -> "5",
+  "numPartitions" -> "4"
+)
+
+spark.read.options(optionsWithBounds).format("jdbc").load
+```
+
+Another option we have is to use a sequence of predicates:
+
+```scala
+val predicates = Array(
+  "valid", "NOT valid"
+)
+
+val dfPartitionedWithPreds = spark.read.options(options)
+  .jdbc(options("url"), options("dbtable"), predicates, new java.util.Properties())
+
+dfPartitionedWithPreds.rdd.partitions.size
+// Int = 2
+
+dfPartitionedWithPreds.rdd.glom.collect
+// Array[Array[org.apache.spark.sql.Row]] = Array(
+//   Array([1,foo,true,2012-01-01 00:03:00.0], [3,bar,true,2015-11-02 22:00:00.0]),
+//   Array([2,foo,false,2013-04-02 10:10:00.0], [4,bar,false,2010-11-02 22:00:00.0]))
+```
+
+Compared to the basic reader these methods load data in a distributed mode but introduce a couple of problems:
+
+- High number of concurrent reads can easily trothle the database.
+- Every executor loads data using separate transaction so when operating on live databse it is not possible to guarantee consitent view.
+- We need a set of mutually exclusive predicates to avoid duplicates.
+- To get all relevant records we have to carefully adjust lower and upper bounds or predicates. For example `predicates` show above wouldn't include records with `valid` being `NULL`.
+
+Conclusions:
+
+- If available, consider using specialized data sources over JDBC connections.
+- Consider using specialized (like PostgreSQL `COPY`) or genaric (like Apache Sqoop) bulk import / export tools.
+- Be sure to understand performance implications of different JDBC data source variants, especially when working with production database.
+- Consider using a separate replica for Spark jobs.
