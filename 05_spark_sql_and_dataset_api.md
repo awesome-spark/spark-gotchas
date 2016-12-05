@@ -158,6 +158,76 @@ list(get_jobs(sc))
 ## []
 ```
 
+## DataFrame Schema Nullablility
+
+### nullability by Reflection
+
+`org.apache.spark.sql.types.StructField` takes `nullable` argument that can be confusing for users which are used to RDBMS and can have unexpected runtime implications. Typically it is set automatically based on the few simple rules:
+
+- If `DataFrame` is created from a local collection or RDD columns inherit nullability semantics of the input data:
+
+  - If input type cannot be `null` (for example Scala numeric types) then `nullable` is set to `false`.
+  - If input type can be `null` (Java boxed numerics, `String`) then `nullable` is set to `false`.
+
+- Optional values are always nullable with `None` mapped to SQL `NULL`.
+
+- If data is loaded from a source which doesn't support nullability constraints, like csv or JSON, fields are marked as `nullable`, even when [coressponding Scala type](https://spark.apache.org/docs/latest/sql-programming-guide.html#data-types) is not.
+
+- Columns created from Python objects are always marked as `nullable`.
+
+### Marking StructFields Excplicitly as Nullable
+
+We can explicitly specify Nullablility for `StructFields` using `nullable` argument. With Scala:
+
+```scala
+import org.apache.spark.sql.types.{StructField, StructType, IntegerType}
+
+val schema = StructType(Seq(StructField("foo", IntegerType, nullable=false)))
+```
+
+With Python:
+
+```python
+from pyspark.sql.types import StructField, StructType, IntegerType
+
+schema  = StructType([StructField("foo", IntegerType(), nullable=False)])
+```
+
+Schema defined as shown above can used to as argument to `SparkSession.createDataFrame` or `DataFrameReader.schema`. It is important to note that only in the first scenario `nullable` field will be used:
+
+```python
+spark.createDataFrame(sc.parallelize([(1, )]), ["foo"]).printSchema()
+## root
+## |-- foo: long (nullable = true)
+
+spark.createDataFrame(sc.parallelize([(1, )]), schema).printSchema()
+## root
+##  |-- foo: integer (nullable = false)
+```
+vs.
+
+```python
+import csv
+import tempfile
+
+path = tempfile.mktemp()
+with open(path, "w") as fw:
+    csv.writer(fw).writerows([(1, ), (2, )])
+
+
+spark.read.schema(schema).csv(path).printSchema()
+## root
+##  |-- foo: integer (nullable = true)
+```
+
+### Nullable Is not a Constraint
+
+### Nullable Is Used to Optimize Query Plan
+
+
+
+## Reading Data Using JDBC Source
+
 ## Window Functions
 
 ### Understanding Window Functions
@@ -271,31 +341,6 @@ df %>% withColumn("sliding_mean", over(avg(df$value), w))
   ```
 
 - in SparkR < 2.0.0 window functions are supported only in raw SQL by calling `sql` method on registered table.
-
-## DataFrame Schema Nullablility
-
-`org.apache.spark.sql.types.StructField` takes `nullable` argument that can be confusing for users which are used to RDBMS and can have unexpected runtime implications. Typically it is set automatically based on the few simple rules:
-
-- If `DataFrame` is created from a local collection or RDD columns inherit nullability semantics of the input data:
-
-  - If input type cannot be `null` (for example Scala numeric types) then `nullable` is set to `false`.
-  - If input type can be `null` (Java boxed numerics, `String`) then `nullable` is set to `false`.
-
-- Optional values are always nullable with `None` mapped to SQL `NULL`.
-
-- If data is loaded from a source which doesn't support nullability constraints, like csv or JSON, fields are marked as `nullable`, even when [coressponding Scala type](https://spark.apache.org/docs/latest/sql-programming-guide.html#data-types) is not.
-
-- Columns created from Python objects are always marked as `nullable`.
-
-### Marking StructFields as Nullable
-
-### Nullable Is not a Constraint
-
-### Nullable Is Used to Optimize Query Plan
-
-### Schema Inference by Reflection
-
-## Reading Data Using JDBC Source
 
 ### Parallelizing Reads
 

@@ -35,6 +35,16 @@
             Inference](05_spark_sql_and_dataset_api.md#sampling-for-schema-inference)
         -   [PySpark Specific
             Considerations](05_spark_sql_and_dataset_api.md#pyspark-specific-considerations)
+    -   [DataFrame Schema Nullablility](05_spark_sql_and_dataset_api.md#dataframe-schema-nullablility)
+        -   [nullability by Reflection](05_spark_sql_and_dataset_api.md#nullability-by-reflection)
+        -   [Marking StructFields Excplicitly as
+            Nullable](05_spark_sql_and_dataset_api.md#marking-structfields-excplicitly-as-nullable)
+        -   [Nullable Is not a
+            Constraint](05_spark_sql_and_dataset_api.md#nullable-is-not-a-constraint)
+        -   [Nullable Is Used to Optimize Query
+            Plan](05_spark_sql_and_dataset_api.md#nullable-is-used-to-optimize-query-plan)
+    -   [Reading Data Using JDBC
+        Source](05_spark_sql_and_dataset_api.md#reading-data-using-jdbc-source)
     -   [Window Functions](05_spark_sql_and_dataset_api.md#window-functions)
         -   [Understanding Window
             Functions](05_spark_sql_and_dataset_api.md#understanding-window-functions)
@@ -42,17 +52,6 @@
         -   [Example Usage](05_spark_sql_and_dataset_api.md#example-usage)
         -   [Requirements and Performance
             Considerations](05_spark_sql_and_dataset_api.md#requirements-and-performance-considerations)
-    -   [DataFrame Schema Nullablility](05_spark_sql_and_dataset_api.md#dataframe-schema-nullablility)
-        -   [Marking StructFields as
-            Nullable](05_spark_sql_and_dataset_api.md#marking-structfields-as-nullable)
-        -   [Nullable Is not a
-            Constraint](05_spark_sql_and_dataset_api.md#nullable-is-not-a-constraint)
-        -   [Nullable Is Used to Optimize Query
-            Plan](05_spark_sql_and_dataset_api.md#nullable-is-used-to-optimize-query-plan)
-        -   [Schema Inference by
-            Reflection](05_spark_sql_and_dataset_api.md#schema-inference-by-reflection)
-    -   [Reading Data Using JDBC
-        Source](05_spark_sql_and_dataset_api.md#reading-data-using-jdbc-source)
         -   [Parallelizing Reads](05_spark_sql_and_dataset_api.md#parallelizing-reads)
 -   [Data Preparation](06_data_preparation.md#data-preparation)
     -   [DataFrame Metadata](06_data_preparation.md#dataframe-metadata)
