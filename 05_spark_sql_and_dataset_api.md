@@ -224,123 +224,7 @@ spark.read.schema(schema).csv(path).printSchema()
 
 ### Nullable Is Used to Optimize Query Plan
 
-
-
 ## Reading Data Using JDBC Source
-
-## Window Functions
-
-### Understanding Window Functions
-
-Window functions can be used to perform a multi-row operation without collapsing the final results. While many window operations can be expressed using some combination of aggregations and joins, window functions provide concise and highly expressive syntax with capabilities reaching much beyond standard SQL expressions.
-
-Each window function call require `OVER` clause which provides a window definition based on grouping (`PARTITION BY`), ordering (`ORDER BY`) and range (`ROWS` / `RANGE BETWEEN`). Window definition can be empty or use some subset of these rules depending on the function being used.
-
-
-### Window Definitions
-
-#### `PARTITION BY` Clause
-
-`PARTITION BY` clause partitions data into groups based on a sequence of expressions. It is more or less equivalent to `GROUP BY` clause in standard aggregations. If not provided it will apply operation on all records. See [Requirements and Performance Considerations](#requirements-and-performance-considerations).
-
-#### `ORDER BY` Clause
-
-`ORDER BY` clause is used to order data based on a sequence of expressions. It is required for window functions which depend on the order of rows like `LAG` / `LEAD` or `FIRST` / `LAST`.
-
-#### `ROWS BETWEEN` and `RANGE BETWEEN` Clauses
-
-`ROWS BETWEEN` / `RANGE BETWEEN` clauses defined respectively number of rows and range of rows to be included in a single window frame. Each frame definitions contains two parts:
-
-- window frame preceding (`UNBOUNDED PRECEDING`, `CURRENT ROW`, value)
-- window frame following (`UNBOUNDED FOLLOWING`, `CURRENT ROW`, value)
-
-In raw SQL both values should be positive numbers:
-
-
-```SQL
-
-OVER (ORDER BY ... ROWS BETWEEN 1 AND 5)  -- include one preceding and 5 following rows
-
-```
-
-In `DataFrame` DSL values should be negative for preceding and positive for following range:
-
-```scala
-
-Window.orderBy($"foo").rangeBetween(-10.0, 15.0)  // Take rows where `foo` is between current - 10.0 and current + 15.0.
-
-```
-
-For unbounded windows one should use  `-sys.maxsize` / `sys.maxsize` and `Long.MinValue` / `Long.MaxValue` in Python and Scala respectively.
-
-
-Default frame specification depends on other aspects of a given window defintion:
-
-- if the `ORDER BY` clause is specified and the function accepts the frame specification, then the frame specification is defined by `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`,
-- otherwise the frame specification is defined by `ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING`.
-
-The first rules has some interesting consequences. For `last("foo").over(Window.orderBy($"foo"))` will always return the current `foo`.
-
-It is also important to note that right now performance impact of unbounded frame definition is asymmetric with `UNBOUNDED FOLLOWING` being significantly more expensive than `UNBOUNDED PRECEDING`. See [SPARK-8816](https://issues.apache.org/jira/browse/SPARK-8816).
-
-
-### Example Usage
-
-Select the row with maximum `value` per `group`:
-
-```python
-from pyspark.sql.functions import row_number
-from pyspark.sql.window import Window
-
-w = Window().partitionBy("group").orderBy(col("value").desc())
-
-(df
-  .withColumn("rn", row_number().over(w))
-  .where(col("rn") == 1))
-
-```
-
-Select rows with `value` larger than an average for `group`
-
-
-```scala
-import org.apache.spark.sql.avg
-import org.apache.spark.sql.expressions.Window
-
-val w = Window.partitionBy($"group")
-
-df.withColumn("group_avg", avg($"value").over(w)).where($"value" > $"group_avg")
-
-```
-
-Compute sliding average of the `value` with window [-3, +3] rows per `group` ordered by `date`
-
-```r
-w <- window.partitionBy(df$group) %>% orderBy(df$date) %>% rowsBetween(-3, 3)
-
-df %>% withColumn("sliding_mean", over(avg(df$value), w))
-
-```
-
-
-### Requirements and Performance Considerations
-
-- In Spark < 2.0.0 window functions are supported only with `HiveContext`. Since Spark 2.0.0 Spark provides native window functions implementation independent of Hive.
-- As a rule of thumb window functions should always contain `PARTITION BY` clause. Without it all data will be moved to a single partition:
-
-  ```scala
-  val df = sc.parallelize((1 to 100).map(x => (x, x)), 10).toDF("id", "x")
-
-  val w = Window.orderBy($"x")
-
-  df.rdd.glom.map(_.size).collect
-  // Array[Int] = Array(10, 10, 10, 10, 10, 10, 10, 10, 10, 10)
-
-  df.withColumn("foo", lag("x", 1).over(w)).rdd.glom.map(_.size).collect
-  // Array[Int] = Array(100)
-  ```
-
-- in SparkR < 2.0.0 window functions are supported only in raw SQL by calling `sql` method on registered table.
 
 ### Parallelizing Reads
 
@@ -525,4 +409,120 @@ Conclusions:
 - Consider using specialized (like PostgreSQL `COPY`) or genaric (like Apache Sqoop) bulk import / export tools.
 - Be sure to understand performance implications of different JDBC data source variants, especially when working with production database.
 - Consider using a separate replica for Spark jobs.
+
+
+## Window Functions
+
+### Understanding Window Functions
+
+Window functions can be used to perform a multi-row operation without collapsing the final results. While many window operations can be expressed using some combination of aggregations and joins, window functions provide concise and highly expressive syntax with capabilities reaching much beyond standard SQL expressions.
+
+Each window function call require `OVER` clause which provides a window definition based on grouping (`PARTITION BY`), ordering (`ORDER BY`) and range (`ROWS` / `RANGE BETWEEN`). Window definition can be empty or use some subset of these rules depending on the function being used.
+
+
+### Window Definitions
+
+#### `PARTITION BY` Clause
+
+`PARTITION BY` clause partitions data into groups based on a sequence of expressions. It is more or less equivalent to `GROUP BY` clause in standard aggregations. If not provided it will apply operation on all records. See [Requirements and Performance Considerations](#requirements-and-performance-considerations).
+
+#### `ORDER BY` Clause
+
+`ORDER BY` clause is used to order data based on a sequence of expressions. It is required for window functions which depend on the order of rows like `LAG` / `LEAD` or `FIRST` / `LAST`.
+
+#### `ROWS BETWEEN` and `RANGE BETWEEN` Clauses
+
+`ROWS BETWEEN` / `RANGE BETWEEN` clauses defined respectively number of rows and range of rows to be included in a single window frame. Each frame definitions contains two parts:
+
+- window frame preceding (`UNBOUNDED PRECEDING`, `CURRENT ROW`, value)
+- window frame following (`UNBOUNDED FOLLOWING`, `CURRENT ROW`, value)
+
+In raw SQL both values should be positive numbers:
+
+
+```SQL
+
+OVER (ORDER BY ... ROWS BETWEEN 1 AND 5)  -- include one preceding and 5 following rows
+
+```
+
+In `DataFrame` DSL values should be negative for preceding and positive for following range:
+
+```scala
+
+Window.orderBy($"foo").rangeBetween(-10.0, 15.0)  // Take rows where `foo` is between current - 10.0 and current + 15.0.
+
+```
+
+For unbounded windows one should use  `-sys.maxsize` / `sys.maxsize` and `Long.MinValue` / `Long.MaxValue` in Python and Scala respectively.
+
+
+Default frame specification depends on other aspects of a given window defintion:
+
+- if the `ORDER BY` clause is specified and the function accepts the frame specification, then the frame specification is defined by `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`,
+- otherwise the frame specification is defined by `ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING`.
+
+The first rules has some interesting consequences. For `last("foo").over(Window.orderBy($"foo"))` will always return the current `foo`.
+
+It is also important to note that right now performance impact of unbounded frame definition is asymmetric with `UNBOUNDED FOLLOWING` being significantly more expensive than `UNBOUNDED PRECEDING`. See [SPARK-8816](https://issues.apache.org/jira/browse/SPARK-8816).
+
+
+### Example Usage
+
+Select the row with maximum `value` per `group`:
+
+```python
+from pyspark.sql.functions import row_number
+from pyspark.sql.window import Window
+
+w = Window().partitionBy("group").orderBy(col("value").desc())
+
+(df
+  .withColumn("rn", row_number().over(w))
+  .where(col("rn") == 1))
+
+```
+
+Select rows with `value` larger than an average for `group`
+
+
+```scala
+import org.apache.spark.sql.avg
+import org.apache.spark.sql.expressions.Window
+
+val w = Window.partitionBy($"group")
+
+df.withColumn("group_avg", avg($"value").over(w)).where($"value" > $"group_avg")
+
+```
+
+Compute sliding average of the `value` with window [-3, +3] rows per `group` ordered by `date`
+
+```r
+w <- window.partitionBy(df$group) %>% orderBy(df$date) %>% rowsBetween(-3, 3)
+
+df %>% withColumn("sliding_mean", over(avg(df$value), w))
+
+```
+
+
+### Requirements and Performance Considerations
+
+- In Spark < 2.0.0 window functions are supported only with `HiveContext`. Since Spark 2.0.0 Spark provides native window functions implementation independent of Hive.
+- As a rule of thumb window functions should always contain `PARTITION BY` clause. Without it all data will be moved to a single partition:
+
+  ```scala
+  val df = sc.parallelize((1 to 100).map(x => (x, x)), 10).toDF("id", "x")
+
+  val w = Window.orderBy($"x")
+
+  df.rdd.glom.map(_.size).collect
+  // Array[Int] = Array(10, 10, 10, 10, 10, 10, 10, 10, 10, 10)
+
+  df.withColumn("foo", lag("x", 1).over(w)).rdd.glom.map(_.size).collect
+  // Array[Int] = Array(100)
+  ```
+
+- in SparkR < 2.0.0 window functions are supported only in raw SQL by calling `sql` method on registered table.
+
 

@@ -45,6 +45,7 @@
             Plan](05_spark_sql_and_dataset_api.md#nullable-is-used-to-optimize-query-plan)
     -   [Reading Data Using JDBC
         Source](05_spark_sql_and_dataset_api.md#reading-data-using-jdbc-source)
+        -   [Parallelizing Reads](05_spark_sql_and_dataset_api.md#parallelizing-reads)
     -   [Window Functions](05_spark_sql_and_dataset_api.md#window-functions)
         -   [Understanding Window
             Functions](05_spark_sql_and_dataset_api.md#understanding-window-functions)
@@ -52,7 +53,6 @@
         -   [Example Usage](05_spark_sql_and_dataset_api.md#example-usage)
         -   [Requirements and Performance
             Considerations](05_spark_sql_and_dataset_api.md#requirements-and-performance-considerations)
-        -   [Parallelizing Reads](05_spark_sql_and_dataset_api.md#parallelizing-reads)
 -   [Data Preparation](06_data_preparation.md#data-preparation)
     -   [DataFrame Metadata](06_data_preparation.md#dataframe-metadata)
         -   [Metadata in ML pipelines](06_data_preparation.md#metadata-in-ml-pipelines)
