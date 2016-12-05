@@ -220,9 +220,74 @@ spark.read.schema(schema).csv(path).printSchema()
 ##  |-- foo: integer (nullable = true)
 ```
 
-### Nullable Is not a Constraint
+### Impact of Nullable
 
-### Nullable Is Used to Optimize Query Plan
+There is a number of important things to remember about `nullable` field.
+
+- Choosing correct value, if not infered, is a user responsibility. If value doesn't reflect the actual state it can result in runtime exceptions or incorrect results. It is particularly important when data is converted to a statically typed `Dataset`. For example:
+
+    ```scala
+    import org.apache.spark.sql.Row
+    import org.apache.spark.sql.types._
+
+    val rows = sc.parallelize(Seq(Row(1, "foo"), Row(2, "bar"), Row(null, null)))
+
+    val schema = StructType(Seq(
+      StructField("id", IntegerType, false), StructField("value", StringType, true)
+    ))
+
+
+    spark.createDataFrame(rows, schema).show
+    ```
+
+    will result in a runtime exception.
+
+    __Note__:
+
+    In Spark 1.x snippet shown above would accept `null` value and provide the output. In 2.x `Encoders` are more restictive.
+
+- When converting `DataFrame` to statically typed `Dataset` class definiton should always reflect `nullable` information. For example:
+
+    ```scala
+    case class BadRecord(id: Int, value: String)
+
+    val schema = StructType(Seq(
+      StructField("id", IntegerType, true), StructField("value", StringType, true)
+    ))
+
+    val df = spark.createDataFrame(rows, schema)
+
+    val badRecords = df.as[BadRecord]
+    badRecords.show
+    // +----+-----+
+    // |  id|value|
+    // +----+-----+
+    // |   1|  foo|
+    // |   2|  bar|
+    // |null| null|
+    // +----+-----+
+
+
+    badRecords.take(3)
+    // java.lang.RuntimeException: Error while decoding: java.lang.RuntimeException: Null value appeared in non-nullable field:
+    // - field (class: "scala.Int", name: "id")
+    // ...
+    ```
+
+    Correct class definition should use optional types:
+
+    ```scala
+    // We could leave value as String here.
+    case class GoodRecord(id: Option[Int], value: Option[String])
+
+    df.as[GoodRecord].take(3)
+    // Array[GoodRecord] =
+    //   Array(GoodRecord(Some(1),foo), GoodRecord(Some(2),bar), GoodRecord(None,None))
+    ```
+
+    When in doubt it is usually better to mark columns as nullable and use optional types for all record fields.
+
+- Nullable is used to optimize query plan. When `IS NULL` predicate is used. If column is marked as not nullable query with `col IS NULL` predicate will immediately return empty result set without executing an action.
 
 ## Reading Data Using JDBC Source
 

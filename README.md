@@ -39,10 +39,7 @@
         -   [nullability by Reflection](05_spark_sql_and_dataset_api.md#nullability-by-reflection)
         -   [Marking StructFields Excplicitly as
             Nullable](05_spark_sql_and_dataset_api.md#marking-structfields-excplicitly-as-nullable)
-        -   [Nullable Is not a
-            Constraint](05_spark_sql_and_dataset_api.md#nullable-is-not-a-constraint)
-        -   [Nullable Is Used to Optimize Query
-            Plan](05_spark_sql_and_dataset_api.md#nullable-is-used-to-optimize-query-plan)
+        -   [Impact of Nullable](05_spark_sql_and_dataset_api.md#impact-of-nullable)
     -   [Reading Data Using JDBC
         Source](05_spark_sql_and_dataset_api.md#reading-data-using-jdbc-source)
         -   [Parallelizing Reads](05_spark_sql_and_dataset_api.md#parallelizing-reads)
