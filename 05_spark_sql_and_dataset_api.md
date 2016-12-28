@@ -158,120 +158,136 @@ list(get_jobs(sc))
 ## []
 ```
 
-## Window Functions
+## DataFrame Schema Nullablility
 
-### Understanding Window Functions
+### nullability by Reflection
 
-Window functions can be used to perform a multi-row operation without collapsing the final results. While many window operations can be expressed using some combination of aggregations and joins, window functions provide concise and highly expressive syntax with capabilities reaching much beyond standard SQL expressions.
+`org.apache.spark.sql.types.StructField` takes `nullable` argument that can be confusing for users which are used to RDBMS and can have unexpected runtime implications. Typically it is set automatically based on the few simple rules:
 
-Each window function call require `OVER` clause which provides a window definition based on grouping (`PARTITION BY`), ordering (`ORDER BY`) and range (`ROWS` / `RANGE BETWEEN`). Window definition can be empty or use some subset of these rules depending on the function being used.
+- If `DataFrame` is created from a local collection or RDD columns inherit nullability semantics of the input data:
 
+  - If input type cannot be `null` (for example Scala numeric types) then `nullable` is set to `false`.
+  - If input type can be `null` (Java boxed numerics, `String`) then `nullable` is set to `false`.
 
-### Window Definitions
+- Optional values are always nullable with `None` mapped to SQL `NULL`.
 
-#### `PARTITION BY` Clause
+- If data is loaded from a source which doesn't support nullability constraints, like csv or JSON, fields are marked as `nullable`, even when [coressponding Scala type](https://spark.apache.org/docs/latest/sql-programming-guide.html#data-types) is not.
 
-`PARTITION BY` clause partitions data into groups based on a sequence of expressions. It is more or less equivalent to `GROUP BY` clause in standard aggregations. If not provided it will apply operation on all records. See [Requirements and Performance Considerations](#requirements-and-performance-considerations).
+- Columns created from Python objects are always marked as `nullable`.
 
-#### `ORDER BY` Clause
+### Marking StructFields Excplicitly as Nullable
 
-`ORDER BY` clause is used to order data based on a sequence of expressions. It is required for window functions which depend on the order of rows like `LAG` / `LEAD` or `FIRST` / `LAST`.
-
-#### `ROWS BETWEEN` and `RANGE BETWEEN` Clauses
-
-`ROWS BETWEEN` / `RANGE BETWEEN` clauses defined respectively number of rows and range of rows to be included in a single window frame. Each frame definitions contains two parts:
-
-- window frame preceding (`UNBOUNDED PRECEDING`, `CURRENT ROW`, value)
-- window frame following (`UNBOUNDED FOLLOWING`, `CURRENT ROW`, value)
-
-In raw SQL both values should be positive numbers:
-
-
-```SQL
-
-OVER (ORDER BY ... ROWS BETWEEN 1 AND 5)  -- include one preceding and 5 following rows
-
-```
-
-In `DataFrame` DSL values should be negative for preceding and positive for following range:
+We can explicitly specify Nullablility for `StructFields` using `nullable` argument. With Scala:
 
 ```scala
+import org.apache.spark.sql.types.{StructField, StructType, IntegerType}
 
-Window.orderBy($"foo").rangeBetween(-10.0, 15.0)  // Take rows where `foo` is between current - 10.0 and current + 15.0.
-
+val schema = StructType(Seq(StructField("foo", IntegerType, nullable=false)))
 ```
 
-For unbounded windows one should use  `-sys.maxsize` / `sys.maxsize` and `Long.MinValue` / `Long.MaxValue` in Python and Scala respectively.
-
-
-Default frame specification depends on other aspects of a given window defintion:
-
-- if the `ORDER BY` clause is specified and the function accepts the frame specification, then the frame specification is defined by `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`,
-- otherwise the frame specification is defined by `ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING`.
-
-The first rules has some interesting consequences. For `last("foo").over(Window.orderBy($"foo"))` will always return the current `foo`.
-
-It is also important to note that right now performance impact of unbounded frame definition is asymmetric with `UNBOUNDED FOLLOWING` being significantly more expensive than `UNBOUNDED PRECEDING`. See [SPARK-8816](https://issues.apache.org/jira/browse/SPARK-8816).
-
-
-### Example Usage
-
-Select the row with maximum `value` per `group`:
+With Python:
 
 ```python
-from pyspark.sql.functions import row_number
-from pyspark.sql.window import Window
+from pyspark.sql.types import StructField, StructType, IntegerType
 
-w = Window().partitionBy("group").orderBy(col("value").desc())
-
-(df
-  .withColumn("rn", row_number().over(w))
-  .where(col("rn") == 1))
-
+schema  = StructType([StructField("foo", IntegerType(), nullable=False)])
 ```
 
-Select rows with `value` larger than an average for `group`
+Schema defined as shown above can used to as argument to `SparkSession.createDataFrame` or `DataFrameReader.schema`. It is important to note that only in the first scenario `nullable` field will be used:
+
+```python
+spark.createDataFrame(sc.parallelize([(1, )]), ["foo"]).printSchema()
+## root
+## |-- foo: long (nullable = true)
+
+spark.createDataFrame(sc.parallelize([(1, )]), schema).printSchema()
+## root
+##  |-- foo: integer (nullable = false)
+```
+vs.
+
+```python
+import csv
+import tempfile
+
+path = tempfile.mktemp()
+with open(path, "w") as fw:
+    csv.writer(fw).writerows([(1, ), (2, )])
 
 
-```scala
-import org.apache.spark.sql.avg
-import org.apache.spark.sql.expressions.Window
-
-val w = Window.partitionBy($"group")
-
-df.withColumn("group_avg", avg($"value").over(w)).where($"value" > $"group_avg")
-
+spark.read.schema(schema).csv(path).printSchema()
+## root
+##  |-- foo: integer (nullable = true)
 ```
 
-Compute sliding average of the `value` with window [-3, +3] rows per `group` ordered by `date`
+### Impact of Nullable
 
-```r
-w <- window.partitionBy(df$group) %>% orderBy(df$date) %>% rowsBetween(-3, 3)
+There is a number of important things to remember about `nullable` field.
 
-df %>% withColumn("sliding_mean", over(avg(df$value), w))
+- Choosing correct value, if not infered, is a user responsibility. If value doesn't reflect the actual state it can result in runtime exceptions or incorrect results. It is particularly important when data is converted to a statically typed `Dataset`. For example:
 
-```
+    ```scala
+    import org.apache.spark.sql.Row
+    import org.apache.spark.sql.types._
+
+    val rows = sc.parallelize(Seq(Row(1, "foo"), Row(2, "bar"), Row(null, null)))
+
+    val schema = StructType(Seq(
+      StructField("id", IntegerType, false), StructField("value", StringType, true)
+    ))
 
 
-### Requirements and Performance Considerations
+    spark.createDataFrame(rows, schema).show
+    ```
 
-- In Spark < 2.0.0 window functions are supported only with `HiveContext`. Since Spark 2.0.0 Spark provides native window functions implementation independent of Hive.
-- As a rule of thumb window functions should always contain `PARTITION BY` clause. Without it all data will be moved to a single partition:
+    will result in a runtime exception.
 
-  ```scala
-  val df = sc.parallelize((1 to 100).map(x => (x, x)), 10).toDF("id", "x")
+    __Note__:
 
-  val w = Window.orderBy($"x")
+    In Spark 1.x snippet shown above would accept `null` value and provide the output. In 2.x `Encoders` are more restictive.
 
-  df.rdd.glom.map(_.size).collect
-  // Array[Int] = Array(10, 10, 10, 10, 10, 10, 10, 10, 10, 10)
+- When converting `DataFrame` to statically typed `Dataset` class definiton should always reflect `nullable` information. For example:
 
-  df.withColumn("foo", lag("x", 1).over(w)).rdd.glom.map(_.size).collect
-  // Array[Int] = Array(100)
-  ```
+    ```scala
+    case class BadRecord(id: Int, value: String)
 
-- in SparkR < 2.0.0 window functions are supported only in raw SQL by calling `sql` method on registered table.
+    val schema = StructType(Seq(
+      StructField("id", IntegerType, true), StructField("value", StringType, true)
+    ))
 
+    val df = spark.createDataFrame(rows, schema)
+
+    val badRecords = df.as[BadRecord]
+    badRecords.show
+    // +----+-----+
+    // |  id|value|
+    // +----+-----+
+    // |   1|  foo|
+    // |   2|  bar|
+    // |null| null|
+    // +----+-----+
+
+
+    badRecords.take(3)
+    // java.lang.RuntimeException: Error while decoding: java.lang.RuntimeException: Null value appeared in non-nullable field:
+    // - field (class: "scala.Int", name: "id")
+    // ...
+    ```
+
+    Correct class definition should use optional types:
+
+    ```scala
+    // We could leave value as String here.
+    case class GoodRecord(id: Option[Int], value: Option[String])
+
+    df.as[GoodRecord].take(3)
+    // Array[GoodRecord] =
+    //   Array(GoodRecord(Some(1),foo), GoodRecord(Some(2),bar), GoodRecord(None,None))
+    ```
+
+    When in doubt it is usually better to mark columns as nullable and use optional types for all record fields.
+
+- Nullable is used to optimize query plan. When `IS NULL` predicate is used. If column is marked as not nullable query with `col IS NULL` predicate will immediately return empty result set without executing an action.
 
 ## Reading Data Using JDBC Source
 
@@ -458,3 +474,120 @@ Conclusions:
 - Consider using specialized (like PostgreSQL `COPY`) or genaric (like Apache Sqoop) bulk import / export tools.
 - Be sure to understand performance implications of different JDBC data source variants, especially when working with production database.
 - Consider using a separate replica for Spark jobs.
+
+
+## Window Functions
+
+### Understanding Window Functions
+
+Window functions can be used to perform a multi-row operation without collapsing the final results. While many window operations can be expressed using some combination of aggregations and joins, window functions provide concise and highly expressive syntax with capabilities reaching much beyond standard SQL expressions.
+
+Each window function call require `OVER` clause which provides a window definition based on grouping (`PARTITION BY`), ordering (`ORDER BY`) and range (`ROWS` / `RANGE BETWEEN`). Window definition can be empty or use some subset of these rules depending on the function being used.
+
+
+### Window Definitions
+
+#### `PARTITION BY` Clause
+
+`PARTITION BY` clause partitions data into groups based on a sequence of expressions. It is more or less equivalent to `GROUP BY` clause in standard aggregations. If not provided it will apply operation on all records. See [Requirements and Performance Considerations](#requirements-and-performance-considerations).
+
+#### `ORDER BY` Clause
+
+`ORDER BY` clause is used to order data based on a sequence of expressions. It is required for window functions which depend on the order of rows like `LAG` / `LEAD` or `FIRST` / `LAST`.
+
+#### `ROWS BETWEEN` and `RANGE BETWEEN` Clauses
+
+`ROWS BETWEEN` / `RANGE BETWEEN` clauses defined respectively number of rows and range of rows to be included in a single window frame. Each frame definitions contains two parts:
+
+- window frame preceding (`UNBOUNDED PRECEDING`, `CURRENT ROW`, value)
+- window frame following (`UNBOUNDED FOLLOWING`, `CURRENT ROW`, value)
+
+In raw SQL both values should be positive numbers:
+
+
+```SQL
+
+OVER (ORDER BY ... ROWS BETWEEN 1 AND 5)  -- include one preceding and 5 following rows
+
+```
+
+In `DataFrame` DSL values should be negative for preceding and positive for following range:
+
+```scala
+
+Window.orderBy($"foo").rangeBetween(-10.0, 15.0)  // Take rows where `foo` is between current - 10.0 and current + 15.0.
+
+```
+
+For unbounded windows one should use  `-sys.maxsize` / `sys.maxsize` and `Long.MinValue` / `Long.MaxValue` in Python and Scala respectively.
+
+
+Default frame specification depends on other aspects of a given window defintion:
+
+- if the `ORDER BY` clause is specified and the function accepts the frame specification, then the frame specification is defined by `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`,
+- otherwise the frame specification is defined by `ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING`.
+
+The first rules has some interesting consequences. For `last("foo").over(Window.orderBy($"foo"))` will always return the current `foo`.
+
+It is also important to note that right now performance impact of unbounded frame definition is asymmetric with `UNBOUNDED FOLLOWING` being significantly more expensive than `UNBOUNDED PRECEDING`. See [SPARK-8816](https://issues.apache.org/jira/browse/SPARK-8816).
+
+
+### Example Usage
+
+Select the row with maximum `value` per `group`:
+
+```python
+from pyspark.sql.functions import row_number
+from pyspark.sql.window import Window
+
+w = Window().partitionBy("group").orderBy(col("value").desc())
+
+(df
+  .withColumn("rn", row_number().over(w))
+  .where(col("rn") == 1))
+
+```
+
+Select rows with `value` larger than an average for `group`
+
+
+```scala
+import org.apache.spark.sql.avg
+import org.apache.spark.sql.expressions.Window
+
+val w = Window.partitionBy($"group")
+
+df.withColumn("group_avg", avg($"value").over(w)).where($"value" > $"group_avg")
+
+```
+
+Compute sliding average of the `value` with window [-3, +3] rows per `group` ordered by `date`
+
+```r
+w <- window.partitionBy(df$group) %>% orderBy(df$date) %>% rowsBetween(-3, 3)
+
+df %>% withColumn("sliding_mean", over(avg(df$value), w))
+
+```
+
+
+### Requirements and Performance Considerations
+
+- In Spark < 2.0.0 window functions are supported only with `HiveContext`. Since Spark 2.0.0 Spark provides native window functions implementation independent of Hive.
+- As a rule of thumb window functions should always contain `PARTITION BY` clause. Without it all data will be moved to a single partition:
+
+  ```scala
+  val df = sc.parallelize((1 to 100).map(x => (x, x)), 10).toDF("id", "x")
+
+  val w = Window.orderBy($"x")
+
+  df.rdd.glom.map(_.size).collect
+  // Array[Int] = Array(10, 10, 10, 10, 10, 10, 10, 10, 10, 10)
+
+  df.withColumn("foo", lag("x", 1).over(w)).rdd.glom.map(_.size).collect
+  // Array[Int] = Array(100)
+  ```
+
+- in SparkR < 2.0.0 window functions are supported only in raw SQL by calling `sql` method on registered table.
+
+
