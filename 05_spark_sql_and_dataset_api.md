@@ -466,7 +466,7 @@ Compared to the basic reader these methods load data in a distributed mode but i
 - High number of concurrent reads can easily trothle the database.
 - Every executor loads data using separate transaction so when operating on live databse it is not possible to guarantee consitent view.
 - We need a set of mutually exclusive predicates to avoid duplicates.
-- To get all relevant records we have to carefully adjust lower and upper bounds or predicates. For example `predicates` show above wouldn't include records with `valid` being `NULL`.
+- To avoid data skew towards complementary partitions (ranges) or get all relevant records (predicates)  we have to carefully adjust lower and upper bounds or predicates respectively. For example `predicates` show above wouldn't include records with `valid` being `NULL`.
 
 Conclusions:
 
