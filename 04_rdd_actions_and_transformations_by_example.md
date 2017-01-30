@@ -123,7 +123,7 @@ It is worth noting that functions like `collect_list` or `collect_set` don't use
 
 #### Dataset.groupByKey
 
-Excluding certain `Dataset` specific optimizations `groupByKey` is comparable to it's RDD counterpart but, similarly to PySpark `RDD.groupByKey`, exposes grouped data as a lazy data structure and can be preferable when expected number of values per key is large.
+Excluding certain `Dataset` specific optimizations `groupByKey` with `mapGroups` / `flatMapGroups` is comparable to it's RDD counterpart but, similarly to PySpark `RDD.groupByKey`, exposes grouped data as a lazy data structure and can be preferable when expected number of values per key is large.
 
 ### When to Use groupByKey and When to Avoid It
 
