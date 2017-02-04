@@ -83,6 +83,11 @@
     Trying](10_date_timestamps_and_lies.md#external-data-sources---die-or-die-trying)
     -   [MySQL](10_date_timestamps_and_lies.md#mysql)
         -   [Dates, Timestamps and Lies](10_date_timestamps_and_lies.md#dates-timestamps-and-lies)
+-   [Small deployments and dynamic allocation](11_small_deployments_and_dynamic_allocation.md#small-deployments-and-dynamic-allocation)
+    -   [Dynamic Allocation](11_small_deployments_and_dynamic_allocation.md#dynamic-allocation)
+        -   [Yet Another Dynamic Resource Allocation YA(D)RN](11_small_deployments_and_dynamic_allocation.md#yet-another-dynamic-resource-allocation-ya(d)rn)
+
+
 
 ## License
 
