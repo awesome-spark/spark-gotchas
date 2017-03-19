@@ -46,6 +46,8 @@
     -   [Reading Data Using JDBC
         Source](05_spark_sql_and_dataset_api.md#reading-data-using-jdbc-source)
         -   [Parallelizing Reads](05_spark_sql_and_dataset_api.md#parallelizing-reads)
+        -   [MySQL: Dates, Timestamps and
+            Lies](05_spark_sql_and_dataset_api.md#mysql-dates-timestamps-and-lies)
     -   [Window Functions](05_spark_sql_and_dataset_api.md#window-functions)
         -   [Understanding Window
             Functions](05_spark_sql_and_dataset_api.md#understanding-window-functions)
@@ -82,10 +84,6 @@
         -   [PySpark and Kryo](09_serialization.md#pyspark-and-kryo)
     -   [SerDe During JVM - Guest
         Communication](09_serialization.md#serde-during-jvm---guest-communication)
--   [External Data Sources - Die or Die
-    Trying](10_date_timestamps_and_lies.md#external-data-sources---die-or-die-trying)
-    -   [MySQL](10_date_timestamps_and_lies.md#mysql)
-        -   [Dates, Timestamps and Lies](10_date_timestamps_and_lies.md#dates-timestamps-and-lies)
 
 ## License
 
