@@ -12,6 +12,9 @@
     -   [Feature Parity and Architecture of the Guest
         Languages](01_understanding_spark_architecure.md#feature-parity-and-architecture-of-the-guest-languages)
 -   [Spark Application Deployment](02_spark_application_deployment.md#spark-application-deployment)
+    -   [Dynamic allocation](02_spark_application_deployment.md#dynamic-allocation)
+        -   [Yet Another Dynamic Resource Allocation
+            YA(D)RN](02_spark_application_deployment.md#yet-another-dynamic-resource-allocation-yadrn)
 -   [Spark Application Building](03_spark_application_building.md#spark-application-building)
 -   [RDD actions and Transformations by
     Example](04_rdd_actions_and_transformations_by_example.md#rdd-actions-and-transformations-by-example)
@@ -83,11 +86,6 @@
     Trying](10_date_timestamps_and_lies.md#external-data-sources---die-or-die-trying)
     -   [MySQL](10_date_timestamps_and_lies.md#mysql)
         -   [Dates, Timestamps and Lies](10_date_timestamps_and_lies.md#dates-timestamps-and-lies)
--   [Small deployments and dynamic allocation](11_small_deployments_and_dynamic_allocation.md#small-deployments-and-dynamic-allocation)
-    -   [Dynamic Allocation](11_small_deployments_and_dynamic_allocation.md#dynamic-allocation)
-        -   [Yet Another Dynamic Resource Allocation YA(D)RN](11_small_deployments_and_dynamic_allocation.md#yet-another-dynamic-resource-allocation-ya(d)rn)
-
-
 
 ## License
 
