@@ -395,7 +395,7 @@ newData.write.format("jdbc").options(options).mode("append") .save
 ```
 Since we enabled query logging in our database we can further confirm that by executing:
 
-```scala`
+```scala
 df.rdd.foreach(_ => ())
 ```
 
