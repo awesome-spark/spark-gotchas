@@ -30,7 +30,7 @@ The biggest advantage of checkpointing is that it is universal. It can be used w
 
 ### "Flat Transformations"
 
-As a complementary to truncating lineage we can use transformations which keep lineage short. This can be achieved either with built-in methods like `SparkContext.union` and `PairRDDFunctions.cogroup` or by preferring fat transformations over transformation chaining.
+As a complementary to truncating lineage we can use transformations which keep lineage short. This can be achieved either with built-in methods like `SparkContext.union` and `PairRDDFunctions.cogroup` or by preferring flat transformations over transformation chaining.
 
 #### Creating an Union of Multiple RDDs
 
