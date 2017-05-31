@@ -190,7 +190,7 @@ model.transform(df).schema[-1].metadata
 ##   'num_attrs': 2}}
 ```
 
-As for now PySpark doesn't support attaching metadata to a single column. It is possible though, to use method similar to this one:
+Before Spark 2.2, PySpark doesn't support attaching metadata to a single column. It is possible though, to use method similar to this one:
 
 ```python
 import json
@@ -216,6 +216,16 @@ df_with_meta = df.withColumn("label_with_meta", col("label").withMeta("", meta))
 df_with_meta.schema[-1].metadata == meta
 
 ## True
+```
+
+Spark 2.2 [added support](https://issues.apache.org/jira/browse/SPARK-18541) for setting metadata with [`Column.alias`](https://spark.apache.org/docs/latest/api/python/pyspark.sql.html?highlight=alias#pyspark.sql.Column.alias):
+
+```python
+df_with_meta = df.withColumn("label_with_meta", col("label").alias("label", metadata=meta))
+df_with_meta.schema[-1].metadata == meta
+
+## True
+
 ```
 
 ### Setting custom column metadata
